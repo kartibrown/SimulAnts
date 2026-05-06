@@ -1,2 +1,10 @@
 bin/
+target/
+build/
+out/
+.settings/
+.classpath
 *.class
+*.log
+*.jar
+.DS_Store
