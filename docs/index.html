@@ -1,15 +1,38 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>SimulAnts</title>
 
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/main.js" defer></script>
 </head>
+
 <body>
+    <div id="topbar">
 
-    <canvas id="world"></canvas>
+        <h1>SimulAnts</h1>
 
-    <script src="js/main.js"></script>
+        <button id="darkModeButton">
+            Dark Mode
+        </button>
+
+    </div>
+
+    <div id="menuScreen">
+        <h3>
+            Welcome to SimulAnts!
+            This is a simple simulation of ant behavior
+        </h3>
+
+        <button id="startButton">Start</button>
+    </div>
+
+    <div id="simulationScreen" class="hidden">
+        <button id="stopButton">Stop</button>
+        <canvas id="world"> </canvas>
+    </div>
 </body>
+
 </html>
