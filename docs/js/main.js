@@ -28,6 +28,8 @@ stopButton.addEventListener('click', () => {
 function startSimulation() {
     console.log("Starting simulation...");
     // Here you would add the logic to start your simulation
+
+    const socket = new WebSocket("ws://localhost:5000"); // For debugging, "wss://api.simulants.kartibrown.com" for production
 }
 
 function stopSimulation() {

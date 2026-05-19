@@ -1,13 +1,13 @@
-package simulants.world;
+package com.kartibrown.simulants.world;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SplittableRandom;
 
-import simulants.Position;
-import simulants.ant.QueenAnt;
-import simulants.ant.WorkerAnt;
-import simulants.item.Food;
+import com.kartibrown.simulants.Position;
+import com.kartibrown.simulants.ant.QueenAnt;
+import com.kartibrown.simulants.ant.WorkerAnt;
+import com.kartibrown.simulants.item.Food;
 
 public final class World
 {

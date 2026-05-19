@@ -1,15 +1,15 @@
-package simulants.ant;
+package com.kartibrown.simulants.ant;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SplittableRandom;
 
-import simulants.Position;
-import simulants.item.Food;
-import simulants.item.Item;
-import simulants.world.Colony;
-import simulants.world.Tile;
-import simulants.world.World;
+import com.kartibrown.simulants.Position;
+import com.kartibrown.simulants.item.Food;
+import com.kartibrown.simulants.item.Item;
+import com.kartibrown.simulants.world.Colony;
+import com.kartibrown.simulants.world.Tile;
+import com.kartibrown.simulants.world.World;
 
 public class WorkerAnt extends Ant
 {

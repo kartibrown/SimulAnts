@@ -1,11 +1,10 @@
-package simulants.ant;
+package com.kartibrown.simulants.ant;
 
 import java.util.SplittableRandom;
 
-import simulants.Position;
-import simulants.item.Item;
-import simulants.world.Colony;
-import simulants.world.World;
+import com.kartibrown.simulants.Position;
+import com.kartibrown.simulants.world.Colony;
+import com.kartibrown.simulants.world.World;
 
 public abstract class Ant
 {

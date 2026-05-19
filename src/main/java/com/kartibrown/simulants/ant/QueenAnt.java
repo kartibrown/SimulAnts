@@ -1,11 +1,10 @@
-package simulants.ant;
+package com.kartibrown.simulants.ant;
 
 import java.util.SplittableRandom;
 
-import simulants.Position;
-import simulants.world.Colony;
-import simulants.world.Tile;
-import simulants.world.World;
+import com.kartibrown.simulants.Position;
+import com.kartibrown.simulants.world.Tile;
+import com.kartibrown.simulants.world.World;
 
 public final class QueenAnt extends Ant
 {

@@ -1,4 +1,4 @@
-package simulants.item;
+package com.kartibrown.simulants.item;
 
 public abstract class Item
 {

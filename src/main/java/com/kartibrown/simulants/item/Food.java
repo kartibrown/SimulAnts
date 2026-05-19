@@ -1,4 +1,4 @@
-package simulants.item;
+package com.kartibrown.simulants.item;
 
 public final class Food extends Item
 {

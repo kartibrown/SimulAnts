@@ -1,9 +1,8 @@
-package simulants.ant;
+package com.kartibrown.simulants.ant;
 
-import java.util.ArrayList;
 import java.util.SplittableRandom;
 
-import simulants.world.World;
+import com.kartibrown.simulants.world.World;
 
 public final class SoldierAnt extends WorkerAnt
 {

@@ -1,4 +1,4 @@
-package simulants;
+package com.kartibrown.simulants;
 
 public final class Position
 {

@@ -1,9 +1,8 @@
-package simulants.world;
+package com.kartibrown.simulants.world;
 
 import java.util.SplittableRandom;
 
-import simulants.Position;
-import simulants.item.Food;
+import com.kartibrown.simulants.item.Food;
 
 public class Tile
 {

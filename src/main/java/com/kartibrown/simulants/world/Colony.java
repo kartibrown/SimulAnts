@@ -1,11 +1,11 @@
-package simulants.world;
+package com.kartibrown.simulants.world;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import simulants.Position;
-import simulants.item.Item;
+import com.kartibrown.simulants.Position;
+import com.kartibrown.simulants.item.Item;
 
 public class Colony
 {

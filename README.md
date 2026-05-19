@@ -21,7 +21,7 @@ The goal is to simulate ants exploring a world, finding food, following pheromon
 - More advanced pheromone behavior
 - Colony expansion
 - Visual JavaScript demo
-- Browser version at `simulants.kartibrown.com`
+- Browser version at `com.kartibrown.simulants.kartibrown.com`
 
 ## Project Structure
 
