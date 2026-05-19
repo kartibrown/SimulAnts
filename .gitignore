@@ -1,10 +1,32 @@
-bin/
-target/
-build/
-out/
+# macOS
+.DS_Store
+**/.DS_Store
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Eclipse
 .settings/
 .classpath
+.project
+
+# VS Code
+.vscode/
+
+# Java build output
+bin/
+out/
+target/
+build/
+
+# Compiled files
 *.class
-*.log
 *.jar
-.DS_Store
+*.war
+
+# Logs
+*.log
+
+# OS generated
+Thumbs.db
