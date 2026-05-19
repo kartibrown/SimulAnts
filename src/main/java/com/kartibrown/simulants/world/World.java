@@ -8,169 +8,195 @@ import com.kartibrown.simulants.Position;
 import com.kartibrown.simulants.ant.QueenAnt;
 import com.kartibrown.simulants.ant.WorkerAnt;
 import com.kartibrown.simulants.item.Food;
+import com.kartibrown.simulants.server.state.AntState;
+import com.kartibrown.simulants.server.state.WorldState;
 
-public final class World
-{
-	public final Colony colony;
-	private final QueenAnt queen;
-	private final List<WorkerAnt> ants;
-	private int foodSpawnTimer;
-	private final int baseFoodSpawnCooldown;
+public final class World {
+    public final Colony colony;
+    private final QueenAnt queen;
+    private final List<WorkerAnt> ants;
+    private int foodSpawnTimer;
+    private final int baseFoodSpawnCooldown;
 
-	private final Tile[][] grid;
-	private final int sizeX, sizeY;
+    private final Tile[][] grid;
+    private final int sizeX, sizeY;
 
-	private final SplittableRandom rng;
+    private final SplittableRandom rng;
 
-	public World()
-	{
-		rng = new SplittableRandom();
-		colony = new Colony();
+    private volatile boolean loop;
 
-		sizeX = 20;
-		sizeY = 20;
-		grid = new Tile[sizeX][sizeY];
+    public World() {
+        rng = new SplittableRandom();
+        colony = new Colony();
 
-		for (int x = 0; x < grid.length; x++)
-			for (int y = 0; y < grid[x].length; y++)
-				grid[x][y] = new Tile(rng.split());
+        sizeX = 40;
+        sizeY = 30;
+        grid = new Tile[sizeX][sizeY];
 
-		queen = new QueenAnt("The Queen", getCenterX() / 2, getCenterY() / 2, rng.split(), 60);
-		ants = new ArrayList<>();
+        for (int x = 0; x < grid.length; x++)
+            for (int y = 0; y < grid[x].length; y++)
+                grid[x][y] = new Tile(rng.split());
 
-		foodSpawnTimer = 0;
-		baseFoodSpawnCooldown = 200;
-	}
+        queen = new QueenAnt("The Queen", getCenterX() / 2, getCenterY() / 2, rng.split(), 60);
+        ants = new ArrayList<>();
 
-	public void start()
-	{
-		while (true)
-		{
-			updateWorld();
-			queen.update(this);
+        foodSpawnTimer = 0;
+        baseFoodSpawnCooldown = 200;
 
-			for (final WorkerAnt ant : ants)
-				ant.update(this);
+        loop = true;
+    }
 
-			try
-			{
-				Thread.sleep(100);
-			}
-			catch (final InterruptedException e)
-			{
-				e.printStackTrace();
-			}
-		}
-	}
+    public void start() {
+        while (loop) {
+            synchronized (this) {
+                updateWorld();
+                queen.update(this);
 
-	private final void updateWorld()
-	{
-		if (colony.hasPosition())
-		{
-			updatePheramones();
-			getTile(colony.getPosition()).setHomePheromones(Tile.MAX_PHEROMONES);
-		}
+                for (final WorkerAnt ant : ants)
+                    ant.update(this);
+            }
 
-		if (foodSpawnTimer <= 0)
-		{
-			addFoodToWorld();
-			foodSpawnTimer = baseFoodSpawnCooldown;
-		}
-		else
-		{
-			foodSpawnTimer--;
-		}
-	}
+            try {
+                Thread.sleep(100);
+            } catch (final InterruptedException e) {
+                System.out.println("Couldn't sleep");
+            }
+        }
+    }
 
-	private final void updatePheramones()
-	{
-		double[][] nextHome = new double[sizeX][sizeY];
+    public void stop() {
+        loop = false;
+    }
 
-		for (int x = 0; x < sizeX; x++)
-		{
-			for (int y = 0; y < sizeY; y++)
-			{
-				final Tile tile = getTile(x, y);
+    private void updateWorld() {
+        if (colony.hasPosition()) {
+            updatePheramones();
+            getTile(colony.getPosition()).setHomePheromones(Tile.MAX_PHEROMONES);
+        }
 
-				double value = tile.getHomePheromones();
+        if (foodSpawnTimer <= 0) {
+            addFoodToWorld();
+            foodSpawnTimer = baseFoodSpawnCooldown;
+        } else {
+            foodSpawnTimer--;
+        }
+    }
 
-				value *= 0.995;
+    private void updatePheramones() {
+        double[][] nextHome = new double[sizeX][sizeY];
 
-				nextHome[x][y] += value * 0.90;
+        for (int x = 0; x < sizeX; x++) {
+            for (int y = 0; y < sizeY; y++) {
+                final Tile tile = getTile(x, y);
 
-				for (final Position p : getNeighbours(x, y))
-				{
-					nextHome[p.getX()][p.getY()] += value * 0.025;
-				}
-			}
-		}
+                double value = tile.getHomePheromones();
 
-		for (int x = 0; x < sizeX; x++)
-		{
-			for (int y = 0; y < sizeY; y++)
-			{
-				getTile(x, y).setHomePheromones(nextHome[x][y]);
-			}
-		}
-	}
+                value *= 0.995;
 
-	private final List<Position> getNeighbours(final int x, final int y)
-	{
-		final List<Position> neighbours = new ArrayList<>();
+                nextHome[x][y] += value * 0.90;
 
-		addIfInside(neighbours, x + 1, y);
-		addIfInside(neighbours, x - 1, y);
-		addIfInside(neighbours, x, y + 1);
-		addIfInside(neighbours, x, y - 1);
+                for (final Position p : getNeighbours(x, y)) {
+                    nextHome[p.getX()][p.getY()] += value * 0.025;
+                }
+            }
+        }
 
-		return neighbours;
-	}
+        for (int x = 0; x < sizeX; x++) {
+            for (int y = 0; y < sizeY; y++) {
+                getTile(x, y).setHomePheromones(nextHome[x][y]);
+            }
+        }
+    }
 
-	private final void addIfInside(final List<Position> list, final int x, final int y)
-	{
-		if (x >= 0 && x < sizeX && y >= 0 && y < sizeY)
-			list.add(new Position(x, y));
-	}
+    private List<Position> getNeighbours(final int x, final int y) {
+        final List<Position> neighbours = new ArrayList<>();
 
-	private final void addFoodToWorld()
-	{
-		final int x = rng.nextInt(sizeX);
-		final int y = rng.nextInt(sizeY);
+        addIfInside(neighbours, x + 1, y);
+        addIfInside(neighbours, x - 1, y);
+        addIfInside(neighbours, x, y + 1);
+        addIfInside(neighbours, x, y - 1);
 
-		grid[x][y].addFood(new Food(rng.nextInt(5)));
-	}
+        return neighbours;
+    }
 
-	/*
-	 * GETTERS & SETTERS
-	 */
+    private void addIfInside(final List<Position> list, final int x, final int y) {
+        if (x >= 0 && x < sizeX && y >= 0 && y < sizeY)
+            list.add(new Position(x, y));
+    }
 
-	public final Tile getTile(final int x, final int y)
-	{ return getTile(new Position(x, y)); }
+    private void addFoodToWorld() {
+        final int x = rng.nextInt(sizeX);
+        final int y = rng.nextInt(sizeY);
 
-	public final Tile getTile(final Position pos)
-	{ return grid[pos.getX()][pos.getY()]; }
+        grid[x][y].addFood(new Food(rng.nextInt(5)));
+    }
 
-	public final Tile[][] getGrid()
-	{ return grid; }
+    // For backend so backend don't get too much info ;-;
+    public synchronized WorldState toState() {
+        final List<AntState> ants = new ArrayList<>();
+        ants.add(
+                new AntState(
+                        this.queen.getName(),
+                        "QUEEN",
+                        this.queen.getPosition().getX(),
+                        this.queen.getPosition().getY())
+        );
 
-	public final QueenAnt getQueen()
-	{ return queen; }
+        for (final WorkerAnt ant : this.ants) {
+            ants.add(
+                    new AntState(
+                            ant.getName(),
+                            "WORKER",
+                            ant.getPosition().getX(),
+                            ant.getPosition().getY()
+                    )
+            );
+        }
 
-	public final List<WorkerAnt> getAnts()
-	{ return ants; }
+        return new WorldState(ants);
+    }
 
-	public final void spawnWorkerFrom(final QueenAnt qAnt)
-	{ ants.add(qAnt.spawnWorker("Worker: " + String.valueOf(ants.size() + 1))); }
+    /*
+     * GETTERS & SETTERS
+     */
 
-	public final int getSizeX()
-	{ return sizeX; }
+    public Tile getTile(final int x, final int y) {
+        return getTile(new Position(x, y));
+    }
 
-	public final int getSizeY()
-	{ return sizeY; }
+    public Tile getTile(final Position pos) {
+        return grid[pos.getX()][pos.getY()];
+    }
 
-	public final int getCenterX()
-	{ return grid.length / 2; }
+    public Tile[][] getGrid() {
+        return grid;
+    }
 
-	public final int getCenterY()
-	{ return grid[0].length / 2; }
+    public QueenAnt getQueen() {
+        return queen;
+    }
+
+    public List<WorkerAnt> getAnts() {
+        return ants;
+    }
+
+    public void spawnWorkerFrom(final QueenAnt qAnt) {
+        ants.add(qAnt.spawnWorker("Worker: " + String.valueOf(ants.size() + 1)));
+    }
+
+    public int getSizeX() {
+        return sizeX;
+    }
+
+    public int getSizeY() {
+        return sizeY;
+    }
+
+    public int getCenterX() {
+        return grid.length / 2;
+    }
+
+    public int getCenterY() {
+        return grid[0].length / 2;
+    }
 }
