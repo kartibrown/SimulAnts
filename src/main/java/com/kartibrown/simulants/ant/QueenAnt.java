@@ -8,11 +8,11 @@ import com.kartibrown.simulants.world.World;
 
 public final class QueenAnt extends Ant
 {
-	private int baseSpawnCooldown;
+	private final int baseSpawnCooldown;
 	private int spawnTimer;
-	private int timePenalty;
+	private final int timePenalty;
 
-	private int dirtyness;
+	private int dirtiness;
 
 	private final int energyCostToSpawn;
 
@@ -85,7 +85,7 @@ public final class QueenAnt extends Ant
 		this.spawnTimer = 100;
 		this.timePenalty = 0;
 
-		this.dirtyness = 0;
+		this.dirtiness = 0;
 
 		this.energyCostToSpawn = energyCostToSpawn;
 
@@ -98,8 +98,8 @@ public final class QueenAnt extends Ant
 	{
 
 		System.out.println(this.name + " spawned " + name);
-		dirtyness += 2;
-		return new WorkerAnt(name, pos, rng.split()); // Namn senare kanske
+		dirtiness += 2;
+		return new WorkerAnt(name, new Position(pos.getX(), pos.getY()), rng.split());
 	}
 
 	@Override
@@ -124,7 +124,7 @@ public final class QueenAnt extends Ant
 			pos.setX(Math.max(0, Math.min(pos.getX(), world.getSizeX() - 1)));
 			pos.setY(Math.max(0, Math.min(pos.getY(), world.getSizeY() - 1)));
 
-			dirtyness += 1;
+			dirtiness += 1;
 
 			System.out.println(name + " moved to X:" + pos.getX() + " Y:" + pos.getY());
 		}
@@ -162,11 +162,11 @@ public final class QueenAnt extends Ant
 	{ return energyCostToSpawn; }
 
 	public final boolean isDirty()
-	{ return dirtyness > 60; }
+	{ return dirtiness > 60; }
 
-	public final void setDirtyness(final int dirtyness)
-	{ this.dirtyness = dirtyness; }
+	public final void setDirtiness(final int dirtyness)
+	{ this.dirtiness = dirtyness; }
 
-	public final int getDirtyness()
-	{ return dirtyness; }
+	public final int getDirtiness()
+	{ return dirtiness; }
 }

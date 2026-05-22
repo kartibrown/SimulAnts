@@ -84,15 +84,15 @@ public class WorkerAnt extends Ant
 
 				final QueenAnt qAnt = world.getQueen();
 
-				if (qAnt.getDirtyness() <= 0)
+				if (qAnt.getDirtiness() <= 0)
 				{
 					System.out.println(ant.getName() + " has finished cleaning " + qAnt.getName());
-					qAnt.setDirtyness(0);
+					qAnt.setDirtiness(0);
 					ant.setTask(REST);
 					return;
 				}
 
-				if (ant.isNear(qAnt, CLEAN_RADIUS) && qAnt.getDirtyness() > 0)
+				if (ant.isNear(qAnt, CLEAN_RADIUS) && qAnt.getDirtiness() > 0)
 				{
 					ant.clean(world.getQueen());
 				}
@@ -195,7 +195,7 @@ public class WorkerAnt extends Ant
 	}
 
 	public final void clean(final QueenAnt qAnt)
-	{ qAnt.setDirtyness(qAnt.getDirtyness() - 5); }
+	{ qAnt.setDirtiness(qAnt.getDirtiness() - 5); }
 
 	/*
 	 * GETTERS & SETTERS
