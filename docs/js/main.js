@@ -49,8 +49,9 @@ function startSimulation() {
     };
 
     socket.onmessage = (event) => {
-        console.log("Got world state:", event.data);
-        renderWorld(JSON.parse(event.data));
+        worldState = JSON.parse(event.data);
+        console.log("Got world state:", worldState);
+        renderWorld(worldState);
     };
 }
 
