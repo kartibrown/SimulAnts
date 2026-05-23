@@ -3,6 +3,9 @@ package com.kartibrown.simulants.world;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SplittableRandom;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import com.kartibrown.simulants.Position;
 import com.kartibrown.simulants.ant.QueenAnt;
@@ -23,6 +26,8 @@ public final class World {
 
     private final SplittableRandom rng;
 
+    private final ScheduledExecutorService scheduler;
+
     private volatile boolean loop;
 
     public World() {
@@ -37,31 +42,37 @@ public final class World {
             for (int y = 0; y < grid[x].length; y++)
                 grid[x][y] = new Tile(rng.split());
 
-        queen = new QueenAnt("The Queen", getCenterX() / 2, getCenterY() / 2, rng.split(), 60);
+        queen = new QueenAnt("The Queen",
+                getCenterX() / 2, getCenterY() / 2,
+                rng.split(), 60);
+
         ants = new ArrayList<>();
 
         foodSpawnTimer = 0;
         baseFoodSpawnCooldown = 200;
 
+        // Better for fixed rate than Thread.sleep()
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+
         loop = true;
     }
 
     public void start() {
-        while (loop) {
-            synchronized (this) {
-                updateWorld();
-                queen.update(this);
+        scheduler.scheduleAtFixedRate(this::update, 0,
+                100, TimeUnit.MILLISECONDS);
+    }
 
-                for (final WorkerAnt ant : ants)
-                    ant.update(this);
-            }
-
-            try {
-                Thread.sleep(100);
-            } catch (final InterruptedException e) {
-                System.out.println("Couldn't sleep");
-            }
+    private void update() {
+        if(!loop){
+            scheduler.shutdown();
+            return;
         }
+
+        updateWorld();
+        queen.update(this);
+
+        for (final WorkerAnt ant : ants)
+            ant.update(this);
     }
 
     public void stop() {
@@ -70,7 +81,7 @@ public final class World {
 
     private void updateWorld() {
         if (colony.hasPosition()) {
-            updatePheramones();
+            updatePheromones();
             getTile(colony.getPosition()).setHomePheromones(Tile.MAX_PHEROMONES);
         }
 
@@ -82,7 +93,7 @@ public final class World {
         }
     }
 
-    private void updatePheramones() {
+    private void updatePheromones() {
         double[][] nextHome = new double[sizeX][sizeY];
 
         for (int x = 0; x < sizeX; x++) {
@@ -181,7 +192,7 @@ public final class World {
     }
 
     public void spawnWorkerFrom(final QueenAnt qAnt) {
-        ants.add(qAnt.spawnWorker("Worker: " + String.valueOf(ants.size() + 1)));
+        ants.add(qAnt.spawnWorker("Worker: " + (ants.size() + 1)));
     }
 
     public int getSizeX() {
