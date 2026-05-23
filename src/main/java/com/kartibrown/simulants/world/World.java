@@ -27,6 +27,8 @@ public final class World {
     private final SplittableRandom rng;
 
     private final ScheduledExecutorService scheduler;
+    private static final int TPS = 20;
+    private static final long TICK_MS = 1000 / TPS; // 50 ms
 
     private volatile boolean loop;
 
@@ -59,7 +61,7 @@ public final class World {
 
     public void start() {
         scheduler.scheduleAtFixedRate(this::update, 0,
-                50, TimeUnit.MILLISECONDS); // 20 TPS
+                TICK_MS, TimeUnit.MILLISECONDS); // 20 TPS
     }
 
     private void update() {
