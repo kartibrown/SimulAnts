@@ -1,90 +1,109 @@
 package com.kartibrown.simulants.ant;
 
 import java.util.SplittableRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.kartibrown.simulants.Position;
 import com.kartibrown.simulants.world.Colony;
 import com.kartibrown.simulants.world.World;
 
-public abstract class Ant
-{
-	protected String name;
+public abstract class Ant {
+    private static final AtomicInteger NEXT_ID = new AtomicInteger();
+    protected final int id;
 
-	protected Position pos;
+    protected String name;
 
-	protected int energy, health, damage;
+    protected Position pos;
 
-	protected final SplittableRandom rng;
+    protected int energy, health, damage;
 
-	public Ant(final String name, final Position pos, final SplittableRandom rng)
-	{
-		this.name = name;
-		this.energy = this.health = 100;
-		this.damage = 0;
+    protected final SplittableRandom rng;
 
-		this.pos = pos;
+    public Ant(final String name, final Position pos, final SplittableRandom rng) {
+        // getAndIncrement so that queen gets id 0 and first worker gets id 1
+        this.id = NEXT_ID.getAndIncrement();
 
-		this.rng = rng;
-	}
+        this.name = name;
+        this.energy = this.health = 100;
+        this.damage = 0;
 
-	public abstract void update(final World world);
+        this.pos = pos;
 
-	public abstract void move(final World world);
+        this.rng = rng;
+    }
 
-	public final void goTo(final Colony colony, final World world)
-	{ goTo(colony.getPosition(), world); }
+    public abstract void update(final World world);
 
-	public final void goTo(final QueenAnt qAnt, final World world)
-	{ goTo(qAnt.getPosition(), world); }
+    public abstract void move(final World world);
 
-	public final void goTo(final Position target, final World world)
-	{
-		final int dx = Integer.compare(target.getX(), this.pos.getX());
-		final int dy = Integer.compare(target.getY(), this.pos.getY());
+    public final void goTo(final Colony colony, final World world) {
+        goTo(colony.getPosition(), world);
+    }
 
-		this.pos.setX(this.pos.getX() + dx);
-		this.pos.setY(this.pos.getY() + dy);
-	}
+    public final void goTo(final QueenAnt qAnt, final World world) {
+        goTo(qAnt.getPosition(), world);
+    }
 
-	/*
-	 * GETTERS & SETTERS
-	 */
+    public final void goTo(final Position target, final World world) {
+        final int dx = Integer.compare(target.getX(), this.pos.getX());
+        final int dy = Integer.compare(target.getY(), this.pos.getY());
 
-	public final boolean isNear(final Ant ant, final int radius)
-	{
-		int dx = Math.abs(this.pos.getX() - ant.getPosition().getX());
-		int dy = Math.abs(this.pos.getY() - ant.getPosition().getY());
+        this.pos.setX(this.pos.getX() + dx);
+        this.pos.setY(this.pos.getY() + dy);
+    }
 
-		return dx <= radius && dy <= radius;
-	}
+    /*
+     * GETTERS & SETTERS
+     */
 
-	public final String getName()
-	{ return name; }
+    public final boolean isNear(final Ant ant, final int radius) {
+        int dx = Math.abs(this.pos.getX() - ant.getPosition().getX());
+        int dy = Math.abs(this.pos.getY() - ant.getPosition().getY());
 
-	public final void setName(String name)
-	{ this.name = name; }
+        return dx <= radius && dy <= radius;
+    }
 
-	public final int getEnergy()
-	{ return energy; }
+    public final int getId() {
+        return this.id;
+    }
 
-	public final void setEnergy(final int energy)
-	{ this.energy = energy; }
+    public final String getName() {
+        return name;
+    }
 
-	public final void setPosition(final Position pos)
-	{ this.pos = pos; }
+    public final void setName(String name) {
+        this.name = name;
+    }
 
-	public final Position getPosition()
-	{ return pos; }
+    public final int getEnergy() {
+        return energy;
+    }
 
-	public final int getHealth()
-	{ return health; }
+    public final void setEnergy(final int energy) {
+        this.energy = energy;
+    }
 
-	public final void setHealth(final int health)
-	{ this.health = health; }
+    public final void setPosition(final Position pos) {
+        this.pos = pos;
+    }
 
-	protected boolean isTierd()
-	{ return getEnergy() <= 20; }
+    public final Position getPosition() {
+        return pos;
+    }
 
-	protected boolean isRested()
-	{ return getEnergy() > 95; }
+    public final int getHealth() {
+        return health;
+    }
+
+    public final void setHealth(final int health) {
+        this.health = health;
+    }
+
+    protected boolean isTierd() {
+        return getEnergy() <= 20;
+    }
+
+    protected boolean isRested() {
+        return getEnergy() > 95;
+    }
 }
