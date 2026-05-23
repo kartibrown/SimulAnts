@@ -59,7 +59,7 @@ public final class World {
 
     public void start() {
         scheduler.scheduleAtFixedRate(this::update, 0,
-                100, TimeUnit.MILLISECONDS);
+                50, TimeUnit.MILLISECONDS); // 20 TPS
     }
 
     private void update() {
@@ -147,6 +147,7 @@ public final class World {
         final List<AntState> ants = new ArrayList<>();
         ants.add(
                 new AntState(
+                        this.queen.getId(),
                         this.queen.getName(),
                         "QUEEN",
                         this.queen.getPosition().getX(),
@@ -156,6 +157,7 @@ public final class World {
         for (final WorkerAnt ant : this.ants) {
             ants.add(
                     new AntState(
+                            ant.getId(),
                             ant.getName(),
                             "WORKER",
                             ant.getPosition().getX(),
