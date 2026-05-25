@@ -35,8 +35,9 @@ stopButton.addEventListener('click', () => {
 function startSimulation() {
     console.log("Starting simulation...");
 
-    // For debugging, "wss://api.simulants.kartibrown.com" for production
-    socket = new WebSocket("ws://localhost:8080/ws");
+    // For debugging "ws://localhost:8080/ws"
+    // "wss://api.kartibrown.com/ws" for production
+    socket = new WebSocket("wss://api.kartibrown.com/ws");
 
     socket.onopen = () => {
         console.log("Connected!");
