@@ -21,8 +21,9 @@ public class SimulationWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public final void afterConnectionEstablished(final WebSocketSession webSocketSession) {
-        final SimulationSession session = simulationManager.createSession(webSocketSession);
+        System.out.println("WebSocket connected: " + webSocketSession.getId());
 
+        final SimulationSession session = simulationManager.createSession(webSocketSession);
         webSocketSession.getAttributes().put("sessionId", session.getId());
     }
 
@@ -48,6 +49,8 @@ public class SimulationWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public final void afterConnectionClosed(final WebSocketSession webSocketSession, final CloseStatus status) {
+        System.out.println("WebSocket closed: " + status);
+
         final String sessionId = (String) webSocketSession.getAttributes().get("sessionId");
 
         if (sessionId != null) {
