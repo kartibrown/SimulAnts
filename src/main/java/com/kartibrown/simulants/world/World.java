@@ -8,6 +8,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.kartibrown.simulants.Position;
+import com.kartibrown.simulants.ant.Ant;
 import com.kartibrown.simulants.ant.QueenAnt;
 import com.kartibrown.simulants.ant.WorkerAnt;
 import com.kartibrown.simulants.item.Food;
@@ -60,7 +61,7 @@ public final class World {
     }
 
     public void start() {
-        scheduler.scheduleAtFixedRate(this::update, 0,
+        scheduler.scheduleWithFixedDelay(this::update, 0,
                 TICK_MS, TimeUnit.MILLISECONDS); // 20 TPS
     }
 
@@ -146,24 +147,23 @@ public final class World {
 
     // For backend so backend don't get too much info ;-;
     public synchronized WorldState toState() {
-        //                                          + 1 for the queen ofc!
-        AntState[] ants = new AntState[this.ants.size() + 1];
-        ants[0] = new AntState(
+        List<AntState> ants = new ArrayList<>();
+        ants.add(new AntState(
                 this.queen.getId(),
                 this.queen.getName(),
                 "QUEEN",
                 this.queen.getPosition().getX(),
                 this.queen.getPosition().getY()
-        );
+        ));
 
-        for(int i = 1; i < ants.length; i++){
-            ants[i] = new AntState(
-                    this.ants.get(i).getId(),
-                    this.ants.get(i).getName(),
+        for(WorkerAnt ant : this.ants){
+            ants.add(new AntState(
+                    ant.getId(),
+                    ant.getName(),
                     "WORKER",
-                    this.ants.get(i).getPosition().getX(),
-                    this.ants.get(i).getPosition().getY()
-            );
+                    ant.getPosition().getX(),
+                    ant.getPosition().getY()
+            ));
         }
 
         return new WorldState(ants);

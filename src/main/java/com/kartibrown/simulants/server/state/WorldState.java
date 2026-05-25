@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 public record WorldState(
-        AntState[] ants
+        List<AntState> ants
 )
 {
 }
