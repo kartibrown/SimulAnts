@@ -8,8 +8,7 @@ public class Tile
 {
 	public static final double MAX_PHEROMONES = 100;
 
-	// Senare kanske ett äpple som ramlar ner random för att det är ett äppelträd
-	// över typ
+	// Maybe need this later if an apple tree randomly drops an apple
 	private final SplittableRandom rng;
 
 	private Food food;
@@ -61,7 +60,7 @@ public class Tile
 	{ this.homePheromones = Math.max(0, Math.min(homePheromones, MAX_PHEROMONES)); }
 
 	public final void setFoodPheromones(final double foodPheromones)
-	{ this.foodPheromones = Math.max(0, Math.min(foodPheromones, MAX_PHEROMONES));}
+	{ this.foodPheromones = Math.max(0, Math.min(foodPheromones, MAX_PHEROMONES)); }
 
 	public final double getFoodPheromones()
 	{ return foodPheromones; }
