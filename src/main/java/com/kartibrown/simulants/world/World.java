@@ -146,25 +146,23 @@ public final class World {
 
     // For backend so backend don't get too much info ;-;
     public synchronized WorldState toState() {
-        final List<AntState> ants = new ArrayList<>();
-        ants.add(
-                new AntState(
-                        this.queen.getId(),
-                        this.queen.getName(),
-                        "QUEEN",
-                        this.queen.getPosition().getX(),
-                        this.queen.getPosition().getY())
+        //                                          + 1 for the queen ofc!
+        AntState[] ants = new AntState[this.ants.size() + 1];
+        ants[0] = new AntState(
+                this.queen.getId(),
+                this.queen.getName(),
+                "QUEEN",
+                this.queen.getPosition().getX(),
+                this.queen.getPosition().getY()
         );
 
-        for (final WorkerAnt ant : this.ants) {
-            ants.add(
-                    new AntState(
-                            ant.getId(),
-                            ant.getName(),
-                            "WORKER",
-                            ant.getPosition().getX(),
-                            ant.getPosition().getY()
-                    )
+        for(int i = 1; i < ants.length; i++){
+            ants[i] = new AntState(
+                    this.ants.get(i).getId(),
+                    this.ants.get(i).getName(),
+                    "WORKER",
+                    this.ants.get(i).getPosition().getX(),
+                    this.ants.get(i).getPosition().getY()
             );
         }
 
