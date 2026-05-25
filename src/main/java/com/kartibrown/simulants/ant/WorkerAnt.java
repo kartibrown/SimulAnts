@@ -34,7 +34,7 @@ public class WorkerAnt extends Ant
 					return;
 				}
 
-				if (ant.isTierd())
+				if (ant.isTired())
 				{
 					ant.setTask(Task.RETURN_HOME);
 					System.out.println(ant.getName() + " is returning home");
@@ -76,7 +76,7 @@ public class WorkerAnt extends Ant
 			@Override
 			final void perform(final WorkerAnt ant, final World world)
 			{
-				if (ant.isTierd())
+				if (ant.isTired())
 				{
 					ant.setTask(Task.REST);
 					return;
