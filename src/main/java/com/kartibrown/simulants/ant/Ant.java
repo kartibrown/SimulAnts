@@ -99,7 +99,7 @@ public abstract class Ant {
         this.health = health;
     }
 
-    protected boolean isTierd() {
+    protected boolean isTired() {
         return getEnergy() <= 20;
     }
 
