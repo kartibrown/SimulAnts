@@ -5,7 +5,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.util.UUID;
 
-public class SimulationSession {
+public final class SimulationSession {
     private final World world;
     private final WebSocketSession webSocketSession;
 
@@ -38,15 +38,19 @@ public class SimulationSession {
      * GETTERS & SETTERS
      */
 
-    public final String getId(){
+    public String getId(){
         return this.id;
     }
 
-    public final World getWorld(){
+    public World getWorld(){
         return this.world;
     }
 
-    public final WebSocketSession getWebSocketSession(){
+    public WebSocketSession getWebSocketSession(){
         return this.webSocketSession;
+    }
+
+    public void setPaused(final boolean b) {
+        this.world.setPaused(b);
     }
 }
