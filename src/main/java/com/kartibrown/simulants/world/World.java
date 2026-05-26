@@ -16,6 +16,8 @@ import com.kartibrown.simulants.server.state.AntState;
 import com.kartibrown.simulants.server.state.WorldState;
 
 public final class World {
+    private final StringBuilder logBuffer;
+
     public final Colony colony;
     private final QueenAnt queen;
     private final List<WorkerAnt> ants;
@@ -28,6 +30,7 @@ public final class World {
     private final SplittableRandom rng;
 
     private final ScheduledExecutorService scheduler;
+    private long tick = 0;
     private static final int TPS = 20;
     private static final long TICK_MS = 1000 / TPS; // 50 ms
 
@@ -35,6 +38,8 @@ public final class World {
     private volatile boolean paused;
 
     public World() {
+        logBuffer = new StringBuilder();
+
         rng = new SplittableRandom();
         colony = new Colony();
 
@@ -55,7 +60,7 @@ public final class World {
         foodSpawnTimer = 0;
         baseFoodSpawnCooldown = 200;
 
-        // Better for fixed rate than Thread.sleep()
+        // Better than Thread.sleep()
         scheduler = Executors.newSingleThreadScheduledExecutor();
 
         loop = true;
@@ -82,6 +87,14 @@ public final class World {
 
         for (final WorkerAnt ant : ants)
             ant.update(this);
+
+        // LOGGING
+        if(!logBuffer.isEmpty() && tick % 20 == 0) {
+            System.out.println(logBuffer);
+            logBuffer.setLength(0);
+        }
+
+        tick++;
     }
 
     public void setPaused(final boolean b) {
@@ -221,5 +234,9 @@ public final class World {
 
     public int getCenterY() {
         return grid[0].length / 2;
+    }
+
+    public void log(final String message) {
+        logBuffer.append(message).append('\n');
     }
 }

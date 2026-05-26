@@ -30,7 +30,7 @@ public class WorkerAnt extends Ant
 				if (world.getQueen().isDirty())
 				{
 					ant.setTask(Task.CLEAN_QUEEN);
-					System.out.println(world.getQueen().getName() + " needs cleaning!");
+					world.log(world.getQueen().getName() + " needs cleaning!");
 					return;
 				}
 
@@ -84,7 +84,7 @@ public class WorkerAnt extends Ant
 
 				if (qAnt.getDirtiness() <= 0)
 				{
-					System.out.println(ant.getName() + " has finished cleaning " + qAnt.getName());
+					world.log(ant.getName() + " has finished cleaning " + qAnt.getName());
 					qAnt.setDirtiness(0);
 					ant.setTask(REST);
 					return;
