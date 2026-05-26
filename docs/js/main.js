@@ -35,9 +35,19 @@ stopButton.addEventListener('click', () => {
 function startSimulation() {
     console.log("Starting simulation...");
 
-    // For debugging "ws://localhost:8080/ws"
-    // "wss://api.kartibrown.com/ws" for production
-    socket = new WebSocket("wss://api.kartibrown.com/ws");
+    const WS_URLS = {
+        local: "ws://localhost:8080/ws",
+        production: "wss://api.kartibrown.com/ws"
+    };
+
+    const wsUrl = window.location.hostname === "localhost"
+        || window.location.hostname === "127.0.0.1"
+        ? WS_URLS.local
+        : WS_URLS.production;
+
+    console.log("Connecting to:", wsUrl);
+
+    socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
         console.log("Connected!");
@@ -51,9 +61,18 @@ function startSimulation() {
 
     socket.onmessage = (event) => {
         worldState = JSON.parse(event.data);
-        console.log("Got world state:", worldState);
         renderWorld(worldState);
     };
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            console.log("Tab hidden, pausing simulation...");
+            socket.send("PAUSE");
+        } else {
+            console.log("Tab visible, resuming simulation...");
+            socket.send("RESUME");
+        }
+    });
 }
 
 function stopSimulation() {
