@@ -7,11 +7,22 @@ canvas.height = 600;
 const TILE_SIZE = 20;
 
 const renderAnts = new Map();
+let latestWorldState = null;
 
 function renderWorld(worldState) {
+    latestWorldState = worldState;
+}
+
+function renderLoop() {
+    requestAnimationFrame(renderLoop);
+
+    if (!latestWorldState) {
+        return;
+    }
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    for (const ant of worldState.ants) {
+    for (const ant of latestWorldState.ants) {
         const id = ant.id;
 
         let renderAnt = renderAnts.get(id);
@@ -25,8 +36,8 @@ function renderWorld(worldState) {
         }
 
         // lerp the render position towards the actual position for smooth movement
-        renderAnt.renderX += (ant.x - renderAnt.renderX) * 0.15;
-        renderAnt.renderY += (ant.y - renderAnt.renderY) * 0.15;
+        renderAnt.renderX += (ant.x - renderAnt.renderX) * 0.10;
+        renderAnt.renderY += (ant.y - renderAnt.renderY) * 0.10;
 
         ctx.fillStyle = ant.type === "QUEEN" ? "#ca1010" : "#b64747";
 
@@ -38,3 +49,5 @@ function renderWorld(worldState) {
         );
     }
 }
+
+renderLoop();
