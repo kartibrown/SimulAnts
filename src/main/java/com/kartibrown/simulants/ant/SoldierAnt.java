@@ -40,6 +40,8 @@ public final class SoldierAnt extends WorkerAnt
 	}
 
 	// FIX
+	// Solider Ants often Patrols near the base and helps out to carry very
+	// heavy item/entities
 	@Override
 	public void move(final World world)
 	{
