@@ -37,7 +37,6 @@ public class WorkerAnt extends Ant
 				if (ant.isTired())
 				{
 					ant.setTask(Task.RETURN_HOME);
-					System.out.println(ant.getName() + " is returning home");
 				}
 				else
 				{
@@ -63,7 +62,6 @@ public class WorkerAnt extends Ant
 				if (ant.getPosition().equals(world.colony.getPosition()))
 				{
 					ant.setTask(Task.REST);
-					System.out.println(ant.getName() + " is resting!");
 				}
 				else
 				{
@@ -168,8 +166,6 @@ public class WorkerAnt extends Ant
 
 	protected final void storeFoodAt(final Colony colony)
 	{
-		System.out.println(this.getName() + " is storing food at the colony");
-
 		colony.storeAll(inventory);
 
 		inventory.clear();
@@ -190,8 +186,6 @@ public class WorkerAnt extends Ant
 
 		final Food takenFood = tile.takeFood(amountToTake);
 		inventory.add(takenFood);
-
-		System.out.println(this.getName() + " picked up food!");
 	}
 
 	public final void clean(final QueenAnt qAnt)
@@ -214,10 +208,10 @@ public class WorkerAnt extends Ant
 	private final int getRemainingInventoryCapacity()
 	{ return MAX_CARRY - getCurrentInventoryWeight(); }
 
-	public final Task getTask()
+	private final Task getTask()
 	{ return task; }
 
-	public final void setTask(final Task task)
+	private void setTask(final Task task)
 	{ this.task = task; }
 
 	private final boolean canCarryMore()
