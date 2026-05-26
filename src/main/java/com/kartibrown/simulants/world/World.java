@@ -32,6 +32,7 @@ public final class World {
     private static final long TICK_MS = 1000 / TPS; // 50 ms
 
     private volatile boolean loop;
+    private volatile boolean paused;
 
     public World() {
         rng = new SplittableRandom();
@@ -58,6 +59,7 @@ public final class World {
         scheduler = Executors.newSingleThreadScheduledExecutor();
 
         loop = true;
+        paused = false;
     }
 
     public void start() {
@@ -71,11 +73,19 @@ public final class World {
             return;
         }
 
+        if (paused) {
+            return;
+        }
+
         updateWorld();
         queen.update(this);
 
         for (final WorkerAnt ant : ants)
             ant.update(this);
+    }
+
+    public void setPaused(final boolean b) {
+        paused = b;
     }
 
     public void stop() {
