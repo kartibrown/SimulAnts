@@ -42,6 +42,14 @@ public class SimulationWebSocketHandler extends TextWebSocketHandler {
             session.markActive();
         }
 
+        if(payload.contains("PAUSE")) {
+            session.setPaused(true);
+        }
+
+        if(payload.contains("RESUME")) {
+            session.setPaused(false);
+        }
+
         if (payload.contains("STOP")) {
             simulationManager.removeSession(sessionId);
         }
