@@ -11,6 +11,8 @@ let heartbeatTimer = null;
 
 const HEARTBEAT_INTERVAL = 10000; // 10 seconds
 const ACTIVE_MSG = "HEARTBEAT";
+const RESUME_MSG = "RESUME";
+const PAUSE_MSG = "PAUSE";
 const STOP_MSG = "STOP";
 
 darkModeToggle.addEventListener("click", () => {
@@ -67,11 +69,28 @@ function startSimulation() {
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
             console.log("Tab hidden, pausing simulation...");
-            socket.send("PAUSE");
+            socket.send(PAUSE_MSG);
         } else {
             console.log("Tab visible, resuming simulation...");
-            socket.send("RESUME");
+            socket.send(RESUME_MSG);
         }
+    });
+
+    let dragging = false;
+
+    document.addEventListener("mousedown", () => {
+        dragging = true;
+    });
+
+    document.addEventListener("mouseup", () => {
+        dragging = false;
+    });
+
+    document.addEventListener("mousemove", (event) => {
+        if (!dragging) return;
+
+        cameraX -= event.movementX;
+        cameraY -= event.movementY;
     });
 }
 
