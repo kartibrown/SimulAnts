@@ -149,21 +149,6 @@ public class WorkerAnt extends Ant
 			energy--;
 	}
 
-	@Override
-	public void move(final World world)
-	{
-		final int xMove = rng.nextBoolean() ? 1 : -1;
-		final int yMove = rng.nextBoolean() ? 1 : -1;
-
-		pos.setX(pos.getX() + (rng.nextBoolean() ? xMove : 0));
-		pos.setY(pos.getY() + (rng.nextBoolean() ? yMove : 0));
-
-		pos.setX(Math.max(0, Math.min(pos.getX(), world.getSizeX() - 1)));
-		pos.setY(Math.max(0, Math.min(pos.getY(), world.getSizeY() - 1)));
-
-		this.energy--;
-	}
-
 	protected final void storeFoodAt(final Colony colony)
 	{
 		colony.storeAll(inventory);
