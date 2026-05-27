@@ -34,7 +34,8 @@ public final class QueenAnt extends Ant
 				}
 
 				if (qAnt.isReadyForBirth() && world.colony.hasEnoughFood()
-						|| qAnt.getEnergy() > qAnt.getEnergyCostToSpawn() && !qAnt.getHasSpawnedFirstAnt())
+						|| qAnt.getEnergy() > qAnt.getEnergyCostToSpawn()
+						&& !qAnt.getHasSpawnedFirstAnt())
 				{
 					int calc = (world.colony.hasEnoughFood()) ? 0 : -qAnt.getEnergyCostToSpawn();
 
@@ -53,22 +54,13 @@ public final class QueenAnt extends Ant
 			{
 				final Tile currentTile = world.getTile(qAnt.getPosition());
 
-				if (qAnt.isSuitableForColony(currentTile) && world.colony.getPosition() == null)
+				if (qAnt.isSuitableForColony(currentTile) && !world.colony.hasPosition())
 				{
-					System.out.println(qAnt.getName() + " found a spot for her colony");
-
-					int x = qAnt.getPosition().getX();
-					int y = qAnt.getPosition().getY();
-
-					world.colony.setPosition(x, y);
-					world.getTile(x, y).setHomePheromones(100);
-
-					qAnt.setTask(Task.SPAWN_WORKER);
+					qAnt.createColony(world);
+					return;
 				}
-				else
-				{
-					qAnt.move(world);
-				}
+
+				qAnt.moveWhileSearchingForColony(world);
 			}
 		};
 
@@ -80,6 +72,8 @@ public final class QueenAnt extends Ant
 	)
 	{
 		super(name, new Position(x, y), rng);
+
+		this.hunger = 100;
 
 		this.baseSpawnCooldown = 100;
 		this.spawnTimer = 100;
@@ -94,16 +88,16 @@ public final class QueenAnt extends Ant
 		this.task = Task.FIND_COLONY;
 	}
 
-	public final WorkerAnt spawnWorker(final String name)
+	public WorkerAnt spawnWorker(final String name, final World world)
 	{
+		world.log(this.name + " spawned " + name);
 
-		System.out.println(this.name + " spawned " + name);
 		dirtiness += 2;
 		return new WorkerAnt(name, new Position(pos.getX(), pos.getY()), rng.split());
 	}
 
 	@Override
-	public final void update(final World world)
+	public void update(final World world)
 	{
 		task.perform(this, world);
 		spawnTimer--;
@@ -111,62 +105,72 @@ public final class QueenAnt extends Ant
 	}
 
 	@Override
-	public final void move(final World world)
+	public boolean canMove(final World world)
 	{
-		if (world.colony.getPosition() == null)
-		{
-			final int xMove = rng.nextBoolean() ? 1 : -1;
-			final int yMove = rng.nextBoolean() ? 1 : -1;
-
-			pos.setX(pos.getX() + (rng.nextBoolean() ? xMove : 0));
-			pos.setY(pos.getY() + (rng.nextBoolean() ? yMove : 0));
-
-			pos.setX(Math.max(0, Math.min(pos.getX(), world.getSizeX() - 1)));
-			pos.setY(Math.max(0, Math.min(pos.getY(), world.getSizeY() - 1)));
-
-			dirtiness += 1;
-
-			System.out.println(name + " moved to X:" + pos.getX() + " Y:" + pos.getY());
-		}
+		return !world.colony.hasPosition();
 	}
 
-	public final void resetSpawnTimer()
+	private void createColony(final World world)
+	{
+		world.log(getName() + " found a spot for her colony");
+
+		final int x = getPosition().getX();
+		final int y = getPosition().getY();
+
+		world.colony.setPosition(x, y);
+		world.getTile(x, y).setHomePheromones(100);
+
+		setTask(Task.SPAWN_WORKER);
+	}
+
+	private void moveWhileSearchingForColony(final World world)
+	{
+		if (!canMove(world))
+		{
+			return;
+		}
+
+		move(world);
+		setDirtiness(getDirtiness() + 1);
+	}
+
+	public void resetSpawnTimer()
 	{ this.spawnTimer = this.baseSpawnCooldown + this.timePenalty; }
 
 	/*
 	 * GETTERS & SETTERS
 	 */
 
-	public final void setHasSpawnedFirstAnt(final boolean hasSpawnedFirstAnt)
+	public void setHasSpawnedFirstAnt(final boolean hasSpawnedFirstAnt)
 	{ this.hasSpawnedFirstAnt = hasSpawnedFirstAnt; }
 
-	public final boolean getHasSpawnedFirstAnt()
+	public boolean getHasSpawnedFirstAnt()
 	{ return this.hasSpawnedFirstAnt; }
 
-	public final boolean isSuitableForColony(final Tile tile)
+	public boolean isSuitableForColony(final Tile tile)
 	{ return tile.getColonySuitabilityScore() > 5; }
 
-	public final boolean isReadyForBirth()
+	public boolean isReadyForBirth()
 	{ return this.spawnTimer <= 0; }
 
-	public final int getBaseSpawnCooldown()
+	public int getBaseSpawnCooldown()
 	{ return baseSpawnCooldown; }
 
-	public final int getTimePenalty()
+	public int getTimePenalty()
 	{ return timePenalty; }
 
-	public final void setTask(final Task task)
+	public void setTask(final Task task)
 	{ this.task = task; }
 
-	public final int getEnergyCostToSpawn()
+	public int getEnergyCostToSpawn()
 	{ return energyCostToSpawn; }
 
-	public final boolean isDirty()
+	public boolean isDirty()
 	{ return dirtiness > 60; }
 
-	public final void setDirtiness(final int dirtyness)
+	public void setDirtiness(final int dirtyness)
 	{ this.dirtiness = dirtyness; }
 
-	public final int getDirtiness()
+	public int getDirtiness()
 	{ return dirtiness; }
 }
