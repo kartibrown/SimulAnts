@@ -17,6 +17,14 @@ public abstract class Ant {
 
     protected int energy, health, damage;
 
+    /**
+     * Represents how hungry the ant is.<br>
+     * <p>
+     * 0   = starving<br>
+     * 100 = fully saturated
+     */
+    protected int hunger;
+
     protected final SplittableRandom rng;
 
     public Ant(final String name, final Position pos, final SplittableRandom rng) {
@@ -25,6 +33,7 @@ public abstract class Ant {
 
         this.name = name;
         this.energy = this.health = 100;
+        this.hunger = 80; // for now until i rework the spawning process of ants
         this.damage = 0;
 
         this.pos = pos;
@@ -34,7 +43,20 @@ public abstract class Ant {
 
     public abstract void update(final World world);
 
-    public abstract void move(final World world);
+    public boolean canMove(final World world) {
+        return true;
+    }
+
+    public final void move(final World world) {
+        final int xMove = rng.nextBoolean() ? 1 : -1;
+        final int yMove = rng.nextBoolean() ? 1 : -1;
+
+        pos.setX(pos.getX() + (rng.nextBoolean() ? xMove : 0));
+        pos.setY(pos.getY() + (rng.nextBoolean() ? yMove : 0));
+
+        pos.setX(Math.clamp(pos.getX(), 0, world.getSizeX() - 1));
+        pos.setY(Math.clamp(pos.getY(), 0, world.getSizeY() - 1));
+    }
 
     public final void goTo(final Colony colony, final World world) {
         goTo(colony.getPosition(), world);
