@@ -197,11 +197,11 @@ public final class World {
      */
 
     public Tile getTile(final int x, final int y) {
-        return getTile(new Position(x, y));
+        return grid[x][y];
     }
 
     public Tile getTile(final Position pos) {
-        return grid[pos.getX()][pos.getY()];
+        return getTile(pos.getX(), pos.getY());
     }
 
     public Tile[][] getGrid() {
@@ -217,7 +217,7 @@ public final class World {
     }
 
     public void spawnWorkerFrom(final QueenAnt qAnt) {
-        ants.add(qAnt.spawnWorker("Worker: " + (ants.size() + 1)));
+        ants.add(qAnt.spawnWorker("Worker: " + (ants.size() + 1), this));
     }
 
     public int getSizeX() {
@@ -234,6 +234,10 @@ public final class World {
 
     public int getCenterY() {
         return grid[0].length / 2;
+    }
+
+    public void log(final Object object){
+        logBuffer.append(object).append("\n");
     }
 
     public void log(final String message) {
