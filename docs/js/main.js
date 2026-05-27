@@ -8,6 +8,7 @@ const darkModeToggle = document.getElementById("darkModeButton");
 
 let socket = null;
 let heartbeatTimer = null;
+let dragging = false;
 
 const HEARTBEAT_INTERVAL = 10000; // 10 seconds
 const ACTIVE_MSG = "HEARTBEAT";
@@ -18,6 +19,39 @@ const STOP_MSG = "STOP";
 darkModeToggle.addEventListener("click", () => {
     console.log("Toggling dark mode...");
     document.documentElement.classList.toggle("white-mode");
+});
+
+document.addEventListener("visibilitychange", () => {
+    if (socket === null || socket.readyState !== WebSocket.OPEN) {
+        return;
+    }
+
+    if (document.hidden) {
+        console.log("Tab hidden, pausing simulation...");
+        socket.send(PAUSE_MSG);
+    } else {
+        console.log("Tab visible, resuming simulation...");
+        socket.send(RESUME_MSG);
+    }
+});
+
+document.addEventListener("mousedown", (event) => {
+    if (event.target.closest("#renderControls")) {
+        return;
+    }
+
+    dragging = true;
+});
+
+document.addEventListener("mouseup", () => {
+    dragging = false;
+});
+
+document.addEventListener("mousemove", (event) => {
+    if (!dragging) return;
+
+    cameraX -= event.movementX;
+    cameraY -= event.movementY;
 });
 
 startButton.addEventListener("click", () => {
@@ -37,6 +71,10 @@ stopButton.addEventListener('click', () => {
 function startSimulation() {
     console.log("Starting simulation...");
 
+    if (socket !== null) {
+        stopSimulation();
+    }
+
     const WS_URLS = {
         local: "ws://localhost:8080/ws",
         production: "wss://api.kartibrown.com/ws"
@@ -55,6 +93,10 @@ function startSimulation() {
         console.log("Connected!");
 
         heartbeatTimer = setInterval(() => {
+            if (socket === null || socket.readyState !== WebSocket.OPEN) {
+                return;
+            }
+
             socket.send(JSON.stringify({
                 type: ACTIVE_MSG
             }));
@@ -66,32 +108,14 @@ function startSimulation() {
         renderWorld(worldState);
     };
 
-    document.addEventListener("visibilitychange", () => {
-        if (document.hidden) {
-            console.log("Tab hidden, pausing simulation...");
-            socket.send(PAUSE_MSG);
-        } else {
-            console.log("Tab visible, resuming simulation...");
-            socket.send(RESUME_MSG);
+    socket.onclose = (event) => {
+        console.log("WebSocket closed:", event.code, event.reason);
+
+        if (heartbeatTimer !== null) {
+            clearInterval(heartbeatTimer);
+            heartbeatTimer = null;
         }
-    });
-
-    let dragging = false;
-
-    document.addEventListener("mousedown", () => {
-        dragging = true;
-    });
-
-    document.addEventListener("mouseup", () => {
-        dragging = false;
-    });
-
-    document.addEventListener("mousemove", (event) => {
-        if (!dragging) return;
-
-        cameraX -= event.movementX;
-        cameraY -= event.movementY;
-    });
+    };
 }
 
 function stopSimulation() {
@@ -106,7 +130,9 @@ function stopSimulation() {
         socket.send(JSON.stringify({
             type: STOP_MSG
         }));
+    }
 
+    if (socket !== null && socket.readyState !== WebSocket.CLOSED) {
         socket.close();
     }
 
