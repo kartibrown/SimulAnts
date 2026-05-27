@@ -38,15 +38,13 @@ public class SimulationWebSocketHandler extends TextWebSocketHandler {
 
         final String payload = message.getPayload();
 
-        if (payload.contains("HEARTBEAT")) {
-            session.markActive();
-        }
+        session.markActive();
 
-        if(payload.contains("PAUSE")) {
+        if (payload.contains("PAUSE")) {
             session.setPaused(true);
         }
 
-        if(payload.contains("RESUME")) {
+        if (payload.contains("RESUME")) {
             session.setPaused(false);
         }
 
@@ -73,7 +71,7 @@ public class SimulationWebSocketHandler extends TextWebSocketHandler {
         simulationManager.cleanupTimedOutSessions();
     }
 
-    @Scheduled(fixedRate = 100)
+    @Scheduled(fixedRate = 50)
     public final void sendWorldStates()
     {
         for (final SimulationSession session : simulationManager.getSessions()) {
@@ -87,6 +85,7 @@ public class SimulationWebSocketHandler extends TextWebSocketHandler {
             try {
                 final String payload = objectMapper.writeValueAsString(session.getWorld().toState());
                 webSocketSession.sendMessage(new TextMessage(payload));
+                session.markActive();
             } catch (final JsonProcessingException e) {
                 System.out.println("Couldn't serialize world state for session " + session.getId());
             } catch (final Exception e) {

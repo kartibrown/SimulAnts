@@ -49,6 +49,43 @@ button {
     cursor: pointer;
 }
 
+#simulationScreen {
+    position: relative;
+}
+
+#stopButton {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+}
+
+#renderControls {
+    position: absolute;
+    top: 12px;
+    left: 120px;
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 8px 10px;
+    background: rgba(20, 20, 20, 0.82);
+    color: #e8e8e8;
+    font-family: system-ui, sans-serif;
+    font-size: 14px;
+}
+
+#antRenderLimit {
+    width: 170px;
+}
+
+#antRenderCount {
+    min-width: 78px;
+    text-align: right;
+}
+
 #darkModeButton {
     position: absolute;
     top: 16px;

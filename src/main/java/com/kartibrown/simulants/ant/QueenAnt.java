@@ -8,6 +8,8 @@ import com.kartibrown.simulants.world.World;
 
 public final class QueenAnt extends Ant
 {
+	public static final int FOOD_COST_SPAWN_ANT = 5;
+
 	private final int baseSpawnCooldown;
 	private int spawnTimer;
 	private final int timePenalty;
@@ -20,60 +22,13 @@ public final class QueenAnt extends Ant
 
 	private Task task;
 
-	private enum Task
-	{
-		SPAWN_WORKER
-		{
-			@Override
-			public final void perform(final QueenAnt qAnt, final World world)
-			{
-				if (!world.colony.hasPosition())
-				{
-					qAnt.setTask(Task.FIND_COLONY);
-					return;
-				}
-
-				if (qAnt.isReadyForBirth() && world.colony.hasEnoughFood()
-						|| qAnt.getEnergy() > qAnt.getEnergyCostToSpawn()
-						&& !qAnt.getHasSpawnedFirstAnt())
-				{
-					int calc = (world.colony.hasEnoughFood()) ? 0 : -qAnt.getEnergyCostToSpawn();
-
-					qAnt.setEnergy(qAnt.getEnergy() + calc);
-
-					world.spawnWorkerFrom(qAnt);
-					qAnt.resetSpawnTimer();
-					qAnt.setHasSpawnedFirstAnt(true);
-				}
-			}
-		},
-		FIND_COLONY
-		{
-			@Override
-			public final void perform(final QueenAnt qAnt, final World world)
-			{
-				final Tile currentTile = world.getTile(qAnt.getPosition());
-
-				if (qAnt.isSuitableForColony(currentTile) && !world.colony.hasPosition())
-				{
-					qAnt.createColony(world);
-					return;
-				}
-
-				qAnt.moveWhileSearchingForColony(world);
-			}
-		};
-
-		public abstract void perform(final QueenAnt qAnt, final World world);
-	}
-
 	public QueenAnt(
 			final String name, final int x, final int y, final SplittableRandom rng, final int energyCostToSpawn
 	)
 	{
 		super(name, new Position(x, y), rng);
 
-		this.hunger = 100;
+		this.hunger = 100; // Does not have logic HERE yet
 
 		this.baseSpawnCooldown = 100;
 		this.spawnTimer = 100;
@@ -159,7 +114,7 @@ public final class QueenAnt extends Ant
 	public int getTimePenalty()
 	{ return timePenalty; }
 
-	public void setTask(final Task task)
+	private void setTask(final Task task)
 	{ this.task = task; }
 
 	public int getEnergyCostToSpawn()
@@ -173,4 +128,58 @@ public final class QueenAnt extends Ant
 
 	public int getDirtiness()
 	{ return dirtiness; }
+
+	private enum Task
+	{
+		SPAWN_WORKER
+		{
+			@Override
+			public final void perform(final QueenAnt qAnt, final World world)
+			{
+				if (!world.colony.hasPosition())
+				{
+					qAnt.setTask(Task.FIND_COLONY);
+					return;
+				}
+
+				final boolean isFirstWorker = !qAnt.getHasSpawnedFirstAnt();
+				final boolean canSpawnFirstWorker = isFirstWorker && qAnt.getEnergy() >= qAnt.getEnergyCostToSpawn();
+				final boolean canSpawnWithFood = !isFirstWorker && qAnt.isReadyForBirth() && world.colony.hasEnoughFood();
+
+				if (canSpawnFirstWorker || canSpawnWithFood)
+				{
+					if (isFirstWorker)
+					{
+						qAnt.setEnergy(qAnt.getEnergy() - qAnt.getEnergyCostToSpawn());
+					}
+					else
+					{
+						world.colony.consumeFood(FOOD_COST_SPAWN_ANT);
+					}
+
+					world.spawnWorkerFrom(qAnt);
+					qAnt.resetSpawnTimer();
+					qAnt.setHasSpawnedFirstAnt(true);
+				}
+			}
+		},
+		FIND_COLONY
+		{
+			@Override
+			public final void perform(final QueenAnt qAnt, final World world)
+			{
+				final Tile currentTile = world.getTile(qAnt.getPosition());
+
+				if (qAnt.isSuitableForColony(currentTile) && !world.colony.hasPosition())
+				{
+					qAnt.createColony(world);
+					return;
+				}
+
+				qAnt.moveWhileSearchingForColony(world);
+			}
+		};
+
+		public abstract void perform(final QueenAnt qAnt, final World world);
+	}
 }

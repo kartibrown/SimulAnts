@@ -13,6 +13,7 @@ import com.kartibrown.simulants.ant.QueenAnt;
 import com.kartibrown.simulants.ant.WorkerAnt;
 import com.kartibrown.simulants.item.Food;
 import com.kartibrown.simulants.server.state.AntState;
+import com.kartibrown.simulants.server.state.TileState;
 import com.kartibrown.simulants.server.state.WorldState;
 
 public final class World {
@@ -22,7 +23,10 @@ public final class World {
     private final QueenAnt queen;
     private final List<WorkerAnt> ants;
     private int foodSpawnTimer;
-    private final int baseFoodSpawnCooldown;
+    private int baseFoodSpawnCooldown;
+    private static final int DEFAULT_BASE_FOOD_SPAWN_COOLDOWN = 160;
+    private static final int EARLY_BASE_FOOD_SPAWN_COOLDOWN = 35;
+    private static final double MIN_VISIBLE_PHEROMONES = 0.5;
 
     private final Tile[][] grid;
     private final int sizeX, sizeY;
@@ -43,13 +47,14 @@ public final class World {
         rng = new SplittableRandom();
         colony = new Colony();
 
-        sizeX = 40;
-        sizeY = 30;
+        sizeX = 100;
+        sizeY = 80;
         grid = new Tile[sizeX][sizeY];
 
         for (int x = 0; x < grid.length; x++)
-            for (int y = 0; y < grid[x].length; y++)
+            for (int y = 0; y < grid[x].length; y++) {
                 grid[x][y] = new Tile(rng.split());
+            }
 
         queen = new QueenAnt("The Queen",
                 getCenterX() / 2, getCenterY() / 2,
@@ -58,7 +63,7 @@ public final class World {
         ants = new ArrayList<>();
 
         foodSpawnTimer = 0;
-        baseFoodSpawnCooldown = 200;
+        baseFoodSpawnCooldown = EARLY_BASE_FOOD_SPAWN_COOLDOWN;
 
         // Better than Thread.sleep()
         scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -73,7 +78,7 @@ public final class World {
     }
 
     private void update() {
-        if(!loop){
+        if (!loop) {
             scheduler.shutdown();
             return;
         }
@@ -88,8 +93,10 @@ public final class World {
         for (final WorkerAnt ant : ants)
             ant.update(this);
 
+        if (tick % 20 == 0)
+            log("Food stored: " + colony.getStoredFood() + " | Workers: " + ants.size());
         // LOGGING
-        if(!logBuffer.isEmpty() && tick % 20 == 0) {
+        if (!logBuffer.isEmpty() && tick % 20 == 0) {
             System.out.println(logBuffer);
             logBuffer.setLength(0);
         }
@@ -117,23 +124,32 @@ public final class World {
         } else {
             foodSpawnTimer--;
         }
+
+        if (ants.size() > 10) {
+            baseFoodSpawnCooldown = DEFAULT_BASE_FOOD_SPAWN_COOLDOWN;
+        }
     }
 
     private void updatePheromones() {
         double[][] nextHome = new double[sizeX][sizeY];
+        double[][] nextFood = new double[sizeX][sizeY];
 
         for (int x = 0; x < sizeX; x++) {
             for (int y = 0; y < sizeY; y++) {
                 final Tile tile = getTile(x, y);
 
-                double value = tile.getHomePheromones();
+                double homeValue = tile.getHomePheromones();
+                double foodValue = tile.getFoodPheromones();
 
-                value *= 0.995;
+                homeValue *= 0.995;
+                foodValue *= 0.992;
 
-                nextHome[x][y] += value * 0.90;
+                nextHome[x][y] += homeValue * 0.90;
+                nextFood[x][y] += foodValue * 0.985;
 
                 for (final Position p : getNeighbours(x, y)) {
-                    nextHome[p.getX()][p.getY()] += value * 0.025;
+                    nextHome[p.getX()][p.getY()] += homeValue * 0.025;
+                    nextFood[p.getX()][p.getY()] += foodValue * 0.00375;
                 }
             }
         }
@@ -141,6 +157,7 @@ public final class World {
         for (int x = 0; x < sizeX; x++) {
             for (int y = 0; y < sizeY; y++) {
                 getTile(x, y).setHomePheromones(nextHome[x][y]);
+                getTile(x, y).setFoodPheromones(nextFood[x][y]);
             }
         }
     }
@@ -165,12 +182,14 @@ public final class World {
         final int x = rng.nextInt(sizeX);
         final int y = rng.nextInt(sizeY);
 
-        grid[x][y].addFood(new Food(rng.nextInt(5)));
+        grid[x][y].addFood(new Food(rng.nextInt(1, 5)));
     }
 
     // For backend so backend don't get too much info ;-;
     public synchronized WorldState toState() {
         List<AntState> ants = new ArrayList<>();
+        List<TileState> tiles = new ArrayList<>();
+
         ants.add(new AntState(
                 this.queen.getId(),
                 this.queen.getName(),
@@ -179,17 +198,37 @@ public final class World {
                 this.queen.getPosition().getY()
         ));
 
-        for(WorkerAnt ant : this.ants){
+        for (WorkerAnt ant : this.ants) {
             ants.add(new AntState(
                     ant.getId(),
                     ant.getName(),
                     "WORKER",
                     ant.getPosition().getX(),
                     ant.getPosition().getY()
-            ));
+                ));
         }
 
-        return new WorldState(ants);
+        for (int x = 0; x < sizeX; x++) {
+            for (int y = 0; y < sizeY; y++) {
+                final Tile tile = getTile(x, y);
+
+                if (tile.getFoodAmount() <= 0
+                        && tile.getHomePheromones() < MIN_VISIBLE_PHEROMONES
+                        && tile.getFoodPheromones() < MIN_VISIBLE_PHEROMONES) {
+                    continue;
+                }
+
+                tiles.add(new TileState(
+                        x,
+                        y,
+                        tile.getFoodAmount(),
+                        tile.getHomePheromones(),
+                        tile.getFoodPheromones()
+                ));
+            }
+        }
+
+        return new WorldState(sizeX, sizeY, ants, tiles);
     }
 
     /*
@@ -236,7 +275,7 @@ public final class World {
         return grid[0].length / 2;
     }
 
-    public void log(final Object object){
+    public void log(final Object object) {
         logBuffer.append(object).append("\n");
     }
 

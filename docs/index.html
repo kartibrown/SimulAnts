@@ -30,6 +30,11 @@
 
     <div id="simulationScreen" class="hidden">
         <button id="stopButton">Stop</button>
+        <div id="renderControls">
+            <label for="antRenderLimit">Ant render cap</label>
+            <input id="antRenderLimit" type="range" min="500" max="2500" step="100" value="1000">
+            <span id="antRenderCount">1000/0</span>
+        </div>
         <canvas id="world"> </canvas>
     </div>
 

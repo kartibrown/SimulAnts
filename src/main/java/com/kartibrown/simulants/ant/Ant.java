@@ -9,6 +9,8 @@ import com.kartibrown.simulants.world.World;
 
 public abstract class Ant {
     private static final AtomicInteger NEXT_ID = new AtomicInteger();
+    private static final int RANDOM_MOVE_CHANCE = 45;
+    private static final int DIRECT_MOVE_CHANCE = 55;
     protected final int id;
 
     protected String name;
@@ -16,6 +18,7 @@ public abstract class Ant {
     protected Position pos;
 
     protected int energy, health, damage;
+    private int moveXDirection, moveYDirection;
 
     /**
      * Represents how hungry the ant is.<br>
@@ -33,10 +36,12 @@ public abstract class Ant {
 
         this.name = name;
         this.energy = this.health = 100;
-        this.hunger = 80; // for now until i rework the spawning process of ants
+        this.hunger = 100;
         this.damage = 0;
 
         this.pos = pos;
+        this.moveXDirection = rng.nextInt(-1, 2);
+        this.moveYDirection = rng.nextInt(-1, 2);
 
         this.rng = rng;
     }
@@ -48,14 +53,35 @@ public abstract class Ant {
     }
 
     public final void move(final World world) {
-        final int xMove = rng.nextBoolean() ? 1 : -1;
-        final int yMove = rng.nextBoolean() ? 1 : -1;
+        if (rng.nextInt(100) >= RANDOM_MOVE_CHANCE)
+            return;
 
-        pos.setX(pos.getX() + (rng.nextBoolean() ? xMove : 0));
-        pos.setY(pos.getY() + (rng.nextBoolean() ? yMove : 0));
+        if ((moveXDirection == 0 && moveYDirection == 0) || rng.nextInt(100) < 25) {
+            moveXDirection = rng.nextInt(-1, 2);
+            moveYDirection = rng.nextInt(-1, 2);
+        }
+
+        if (rng.nextInt(100) < 15) {
+            moveXDirection = rng.nextInt(-1, 2);
+        }
+
+        if (rng.nextInt(100) < 15) {
+            moveYDirection = rng.nextInt(-1, 2);
+        }
+
+        pos.setX(pos.getX() + moveXDirection);
+        pos.setY(pos.getY() + moveYDirection);
 
         pos.setX(Math.clamp(pos.getX(), 0, world.getSizeX() - 1));
         pos.setY(Math.clamp(pos.getY(), 0, world.getSizeY() - 1));
+
+        if (pos.getX() == 0 || pos.getX() == world.getSizeX() - 1) {
+            moveXDirection *= -1;
+        }
+
+        if (pos.getY() == 0 || pos.getY() == world.getSizeY() - 1) {
+            moveYDirection *= -1;
+        }
     }
 
     public final void goTo(final Colony colony, final World world) {
@@ -67,6 +93,9 @@ public abstract class Ant {
     }
 
     public final void goTo(final Position target, final World world) {
+        if (rng.nextInt(100) >= DIRECT_MOVE_CHANCE)
+            return;
+
         final int dx = Integer.compare(target.getX(), this.pos.getX());
         final int dy = Integer.compare(target.getY(), this.pos.getY());
 
@@ -78,7 +107,7 @@ public abstract class Ant {
      * GETTERS & SETTERS
      */
 
-    public final boolean isNear(final Ant ant, final int radius) {
+    protected final boolean isNear(final Ant ant, final int radius) {
         int dx = Math.abs(this.pos.getX() - ant.getPosition().getX());
         int dy = Math.abs(this.pos.getY() - ant.getPosition().getY());
 
@@ -102,7 +131,7 @@ public abstract class Ant {
     }
 
     public final void setEnergy(final int energy) {
-        this.energy = energy;
+        this.energy = Math.clamp(energy, 0, 100);
     }
 
     public final void setPosition(final Position pos) {
@@ -118,11 +147,30 @@ public abstract class Ant {
     }
 
     public final void setHealth(final int health) {
-        this.health = health;
+        this.health = Math.clamp(health, 0, 100);
+    }
+
+    public final int getHunger(){
+        return hunger;
+    }
+
+    public final void setHunger(final int hunger)
+    {this.hunger = Math.clamp(hunger, 0, 100); }
+
+    public final boolean isHungry(){
+        return hunger < 20;
+    }
+
+    public final boolean isHungerFull(){
+        return hunger > 90;
     }
 
     protected boolean isTired() {
         return getEnergy() <= 20;
+    }
+
+    protected boolean isExhausted() {
+        return getEnergy() <= 0;
     }
 
     protected boolean isRested() {

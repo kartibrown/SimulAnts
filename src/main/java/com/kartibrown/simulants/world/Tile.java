@@ -4,89 +4,109 @@ import java.util.SplittableRandom;
 
 import com.kartibrown.simulants.item.Food;
 
-public class Tile
-{
-	public static final double MAX_PHEROMONES = 100;
+public class Tile {
+    public static final double MAX_PHEROMONES = 100;
 
-	// Maybe need this later if an apple tree randomly drops an apple
-	private final SplittableRandom rng;
+    // Maybe need this later if an apple tree randomly drops an apple
+    private final SplittableRandom rng;
 
-	private Food food;
-	private boolean isOpen;
+    private Food food;
+    private boolean isOpen;
 
-	private double homePheromones, foodPheromones;
+    private double homePheromones, foodPheromones;
 
-	public Tile(final SplittableRandom rng)
-	{
-		this.rng = rng;
+    public Tile(final SplittableRandom rng) {
+        this.rng = rng;
 
-		if (rng.nextInt(100) > 90)
-			addFood(new Food(rng.nextInt(5)));
+        if (rng.nextInt(100) > 90)
+            addFood(new Food(rng.nextInt(1, 5)));
 
-		isOpen = rng.nextInt(100) > 40;
+        isOpen = rng.nextInt(100) > 40;
 
-		homePheromones = foodPheromones = 0;
-	}
+        homePheromones = foodPheromones = 0;
+    }
 
-	public final void addFood(final Food food)
-	{ this.food = food; }
+    public final void addFood(final Food food) {
+        if (this.food == null) {
+            this.food = food;
+        } else {
+            this.food.setAmount(this.food.getAmount() + food.getAmount());
+        }
+    }
 
-	public final boolean hasFood()
-	{ return food != null && food.getAmount() > 0; }
+    public final boolean hasFood() {
+        return food != null && food.getAmount() > 0;
+    }
 
-	public final Food peekFood()
-	{ return food; }
+    public final Food peekFood() {
+        return food;
+    }
 
-	public final Food takeFood(final int amount)
-	{
-		if (food == null || amount <= 0)
-			return null;
+    public final Food takeFood(final int amount) {
+        if (food == null || amount <= 0)
+            return null;
 
-		final int amountToTake = Math.min(amount, food.getAmount());
+        final int amountToTake = Math.min(amount, food.getAmount());
 
-		food.setAmount(food.getAmount() - amountToTake);
+        food.setAmount(food.getAmount() - amountToTake);
 
-		if (food.getAmount() <= 0)
-			food = null;
+        if (food.getAmount() <= 0)
+            food = null;
 
-		return new Food(amountToTake);
-	}
+        return new Food(amountToTake);
+    }
 
-	/*
-	 * GETTERS & SETTERS
-	 */
+    /*
+     * GETTERS & SETTERS
+     */
 
-	public final void setHomePheromones(final double homePheromones)
-	{ this.homePheromones = Math.max(0, Math.min(homePheromones, MAX_PHEROMONES)); }
+    public final void setHomePheromones(final double homePheromones) {
+        this.homePheromones = Math.clamp(homePheromones, 0, MAX_PHEROMONES);
+    }
 
-	public final void setFoodPheromones(final double foodPheromones)
-	{ this.foodPheromones = Math.max(0, Math.min(foodPheromones, MAX_PHEROMONES)); }
+    public final void setFoodPheromones(final double foodPheromones) {
+        this.foodPheromones = Math.clamp(foodPheromones, 0, MAX_PHEROMONES);
+    }
 
-	public final double getFoodPheromones()
-	{ return foodPheromones; }
+    public final void addFoodPheromones(final double foodPheromones) {
+        setFoodPheromones(this.foodPheromones + foodPheromones);
+    }
 
-	public final double getHomePheromones()
-	{ return homePheromones; }
+    public final double getFoodPheromones() {
+        return foodPheromones;
+    }
 
-	public final boolean isCovered()
-	{ return !isOpen; }
+    public final double getHomePheromones() {
+        return homePheromones;
+    }
 
-	public final boolean isOpen()
-	{ return isOpen; }
+    public final boolean isCovered() {
+        return !isOpen;
+    }
 
-	public final int getColonySuitabilityScore()
-	{
-		int score = 0;
+    public final boolean isOpen() {
+        return isOpen;
+    }
 
-		if (hasFood())
-			score += 5;
+    public final int getColonySuitabilityScore() {
+        int score = 0;
 
-		if (isCovered())
-			score += 3;
+        if (hasFood())
+            score += 5;
 
-		if (isOpen())
-			score -= 2;
+        if (isCovered())
+            score += 3;
 
-		return score;
-	}
+        if (isOpen())
+            score -= 2;
+
+        return score;
+    }
+
+    public final int getFoodAmount() {
+        if (food == null)
+            return 0;
+
+        return food.getAmount();
+    }
 }

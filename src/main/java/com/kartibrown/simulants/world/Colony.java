@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.kartibrown.simulants.Position;
+import com.kartibrown.simulants.ant.QueenAnt;
 import com.kartibrown.simulants.item.Item;
 
 public class Colony
@@ -63,5 +64,10 @@ public class Colony
 	{ return storedFood; }
 
 	public final boolean hasEnoughFood()
-	{ return getStoredFood() >= 5; }
+	{ return getStoredFood() >= QueenAnt.FOOD_COST_SPAWN_ANT; }
+
+	public final void consumeFood(final int amount)
+	{
+		storedFood = Math.clamp(storedFood - amount, 0, Integer.MAX_VALUE);
+	}
 }
