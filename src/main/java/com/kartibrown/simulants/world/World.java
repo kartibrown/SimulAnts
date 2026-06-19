@@ -83,6 +83,9 @@ public final class World {
             return;
         }
 
+        /*
+         * This needs to be reworked as Thread.wait()/notify() is better
+         */
         if (paused) {
             return;
         }
@@ -104,14 +107,6 @@ public final class World {
         tick++;
     }
 
-    public void setPaused(final boolean b) {
-        paused = b;
-    }
-
-    public void stop() {
-        loop = false;
-    }
-
     private void updateWorld() {
         if (colony.hasPosition()) {
             updatePheromones();
@@ -125,6 +120,7 @@ public final class World {
             foodSpawnTimer--;
         }
 
+        // When the colony is bigger make food spawn a little less
         if (ants.size() > 10) {
             baseFoodSpawnCooldown = DEFAULT_BASE_FOOD_SPAWN_COOLDOWN;
         }
@@ -147,7 +143,7 @@ public final class World {
                 nextHome[x][y] += homeValue * 0.90;
                 nextFood[x][y] += foodValue * 0.985;
 
-                for (final Position p : getNeighbours(x, y)) {
+                for (final Position p : getNeighbourTiles(x, y)) {
                     nextHome[p.getX()][p.getY()] += homeValue * 0.025;
                     nextFood[p.getX()][p.getY()] += foodValue * 0.00375;
                 }
@@ -160,22 +156,6 @@ public final class World {
                 getTile(x, y).setFoodPheromones(nextFood[x][y]);
             }
         }
-    }
-
-    private List<Position> getNeighbours(final int x, final int y) {
-        final List<Position> neighbours = new ArrayList<>();
-
-        addIfInside(neighbours, x + 1, y);
-        addIfInside(neighbours, x - 1, y);
-        addIfInside(neighbours, x, y + 1);
-        addIfInside(neighbours, x, y - 1);
-
-        return neighbours;
-    }
-
-    private void addIfInside(final List<Position> list, final int x, final int y) {
-        if (x >= 0 && x < sizeX && y >= 0 && y < sizeY)
-            list.add(new Position(x, y));
     }
 
     private void addFoodToWorld() {
@@ -234,6 +214,46 @@ public final class World {
     /*
      * GETTERS & SETTERS
      */
+
+    /**
+     * Gets the tiles that is north, east, south and west of the position
+     * @param pos Position
+     * @return North, east, south and west tiles of the position<br>
+     * does not return tiles if they are outside the world
+     */
+    public List<Position> getNeighbourTiles(final Position pos) {
+        return getNeighbourTiles(pos.getX(), pos.getY());
+    }
+
+    /**
+     * Gets the tiles that is north, east, south and west of the position
+     * @param x x position
+     * @param y y position
+     * @return North, east, south and west tiles of the position
+     */
+    public List<Position> getNeighbourTiles(final int x, final int y) {
+        final List<Position> neighbours = new ArrayList<>();
+
+        addIfInsideWorld(neighbours, x + 1, y);
+        addIfInsideWorld(neighbours, x - 1, y);
+        addIfInsideWorld(neighbours, x, y + 1);
+        addIfInsideWorld(neighbours, x, y - 1);
+
+        return neighbours;
+    }
+
+    private void addIfInsideWorld(final List<Position> list, final int x, final int y) {
+        if (x >= 0 && x < sizeX && y >= 0 && y < sizeY)
+            list.add(new Position(x, y));
+    }
+
+    public void setPaused(final boolean b) {
+        paused = b;
+    }
+
+    public void stop() {
+        loop = false;
+    }
 
     public Tile getTile(final int x, final int y) {
         return grid[x][y];

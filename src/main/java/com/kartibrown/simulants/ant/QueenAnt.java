@@ -62,6 +62,10 @@ public final class QueenAnt extends Ant
 	@Override
 	public boolean canMove(final World world)
 	{
+		// if the queen has found her place to build the colony
+		// she stays there to lay eggs
+
+		// if she has not found her place yet, she'll continue searching
 		return !world.colony.hasPosition();
 	}
 
@@ -81,9 +85,7 @@ public final class QueenAnt extends Ant
 	private void moveWhileSearchingForColony(final World world)
 	{
 		if (!canMove(world))
-		{
 			return;
-		}
 
 		move(world);
 		setDirtiness(getDirtiness() + 1);
@@ -108,12 +110,6 @@ public final class QueenAnt extends Ant
 	public boolean isReadyForBirth()
 	{ return this.spawnTimer <= 0; }
 
-	public int getBaseSpawnCooldown()
-	{ return baseSpawnCooldown; }
-
-	public int getTimePenalty()
-	{ return timePenalty; }
-
 	private void setTask(final Task task)
 	{ this.task = task; }
 
@@ -123,8 +119,8 @@ public final class QueenAnt extends Ant
 	public boolean isDirty()
 	{ return dirtiness > 60; }
 
-	public void setDirtiness(final int dirtyness)
-	{ this.dirtiness = dirtyness; }
+	public void setDirtiness(final int dirtiness)
+	{ this.dirtiness = dirtiness; }
 
 	public int getDirtiness()
 	{ return dirtiness; }

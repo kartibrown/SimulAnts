@@ -8,10 +8,10 @@ public final class Food extends Item
 	{ this.amount = amount; }
 
 	@Override
-	public final int getWeight()
+	public int getWeight()
 	{ return amount * WEIGHT_PER_UNIT; }
 
 	@Override
-	public final int getWeightPerUnit()
+	public int getWeightPerUnit()
 	{ return WEIGHT_PER_UNIT; }
 }

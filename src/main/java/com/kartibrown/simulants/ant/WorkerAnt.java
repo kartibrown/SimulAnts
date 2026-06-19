@@ -26,6 +26,11 @@ public class WorkerAnt extends Ant {
     private static final double MIN_FOOD_PHEROMONE_TO_FOLLOW = 1.0;
     private static final double FOOD_PHEROMONE_DROP_PER_FOOD = 8.0;
 
+    /**
+     * Worker Ant points for finding food or doing good
+     */
+    private int points;
+
     protected final List<Item> inventory;
 
     private Task task;
@@ -36,7 +41,9 @@ public class WorkerAnt extends Ant {
 
         task = Task.REST;
         inventory = new ArrayList<>();
-        this.damage = 2;
+        this.damage = 2; // not relevant yet, because ants can't die
+
+        this.points = 0;
     }
 
     public WorkerAnt(final String name, final int x, final int y, final SplittableRandom rng) {
@@ -45,8 +52,13 @@ public class WorkerAnt extends Ant {
         task = Task.REST;
         inventory = new ArrayList<>();
         this.damage = 2;
+
+        this.points = 0;
     }
 
+    /**
+     * Updates the worker ant logic
+     */
     @Override
     public void update(final World world) {
         final Task startingTask = task;
@@ -55,8 +67,25 @@ public class WorkerAnt extends Ant {
 
         updateHunger();
 
+        // update their points
+        updatePoints();
+
+        // when to charge ant their energy
         if (startingTask != Task.REST && rng.nextInt(100) < WORK_ENERGY_COST_CHANCE)
             setEnergy(energy - 1);
+    }
+
+    @Override
+    public final boolean canMove(final World world) {
+        // I can't come up when ants can't move xD
+        return true;
+    }
+
+    private void updatePoints() {
+        if (task == Task.FIND_FOOD) {
+            final int i = (rng.nextBoolean()) ? 1 : 0;
+            setPoints(points - i);
+        }
     }
 
     private void updateHunger() {
@@ -75,6 +104,10 @@ public class WorkerAnt extends Ant {
         }
     }
 
+    /*
+     * This relies on inventory only being food
+     * It needs to get re worked when having multiple items in inventory
+     */
     protected final void storeFoodAt(final Colony colony) {
         colony.storeAll(inventory);
 
@@ -95,6 +128,8 @@ public class WorkerAnt extends Ant {
 
         final Food takenFood = tile.takeFood(amountToTake);
         inventory.add(takenFood);
+
+        points += 4; // give them points to know when they did good
     }
 
     protected final void eatFoodFrom(final Tile tile) {
@@ -117,7 +152,7 @@ public class WorkerAnt extends Ant {
      * GETTERS & SETTERS
      */
 
-    private final int getCurrentInventoryWeight() {
+    private int getCurrentInventoryWeight() {
         int total = 0;
 
         for (final Item item : inventory)
@@ -126,12 +161,8 @@ public class WorkerAnt extends Ant {
         return total;
     }
 
-    private final int getRemainingInventoryCapacity() {
+    private int getRemainingInventoryCapacity() {
         return MAX_CARRY - getCurrentInventoryWeight();
-    }
-
-    private Task getTask() {
-        return task;
     }
 
     private void setTask(final Task task) {
@@ -140,6 +171,112 @@ public class WorkerAnt extends Ant {
 
     private boolean canCarryMore() {
         return getRemainingInventoryCapacity() > 0;
+    }
+
+    private boolean followFoodPheromones(final World world) {
+        if (rng.nextInt(100) >= FOOD_PHEROMONE_FOLLOW_CHANCE)
+            return false;
+
+        final Position currentPosition = new Position(
+                getPosition().getX(), getPosition().getY()
+        );
+
+        Position bestPosition = null;
+        double bestPheromones = Math.max(
+                MIN_FOOD_PHEROMONE_TO_FOLLOW,
+                world.getTile(getPosition()).getFoodPheromones()
+                        + FOOD_PHEROMONE_UPHILL_MARGIN
+        );
+
+        final int x = getPosition().getX();
+        final int y = getPosition().getY();
+
+        // loop through ant neighbor tiles
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                // dont check current tile
+                if (dx == 0 && dy == 0)
+                    continue;
+
+                final int nextX = x + dx;
+                final int nextY = y + dy;
+
+                // dont check outside map tiles
+                if (nextX < 0 || nextX >= world.getSizeX() || nextY < 0 || nextY >= world.getSizeY())
+                    continue;
+
+                // dont check previous checked tile
+                if (previousFoodPheromonePosition != null
+                        && nextX == previousFoodPheromonePosition.getX()
+                        && nextY == previousFoodPheromonePosition.getY()) {
+                    continue;
+                }
+
+                // Check if the next position has better pheromones
+                final double pheromones = world.getTile(nextX, nextY).getFoodPheromones();
+
+                if (pheromones > bestPheromones) {
+                    bestPheromones = pheromones;
+                    bestPosition = new Position(nextX, nextY);
+                }
+            }
+        }
+
+        // couldn't find any foodPheromones
+        if (bestPosition == null)
+            return false;
+
+        previousFoodPheromonePosition = currentPosition;
+        goTo(bestPosition, world);
+
+        points += 1; // give points for following the food pheromones
+        return true;
+    }
+
+    private void dropFoodPheromones(final World world) {
+        // this can't happen here but is a failsafe
+        if (!world.colony.hasPosition())
+            return;
+
+        final int distanceFromHome = getDistanceFrom(world.colony.getPosition());
+        final double baseAmount = Math.max(1, getCurrentInventoryAmount())
+                * FOOD_PHEROMONE_DROP_PER_FOOD;
+
+        // To not give too many pheromones where base is
+        if (distanceFromHome < MIN_DISTANCE_FROM_HOME_TO_DROP_FOOD_PHEROMONES
+                && baseAmount < MIN_FOOD_PHEROMONE_DROP_NEAR_HOME) {
+            return;
+        }
+
+        final double distanceScale = Math.clamp(
+                (double) distanceFromHome / FULL_FOOD_PHEROMONE_DISTANCE_FROM_HOME
+                ,
+                0.35,
+                1.0);
+
+        /*
+         * Make less food pheromones when getting closer to home
+         *
+         * This makes it easier for ants to know which Tile has
+         * more food pheromones to know which direction på follow
+         * when following food pheromones
+         */
+        final double amount = baseAmount * distanceScale;
+
+        world.getTile(getPosition()).addFoodPheromones(amount);
+    }
+
+    private int getCurrentInventoryAmount() {
+        int total = 0;
+
+        for (final Item item : inventory)
+            total += item.getAmount();
+
+        return total;
+    }
+
+    private void setPoints(final int points) {
+        this.points = Math.clamp(points, 0, 30);
     }
 
     /*
@@ -201,7 +338,8 @@ public class WorkerAnt extends Ant {
                 final Tile currentTile = world.getGrid()[x][y];
 
                 if (currentTile.hasFood()) {
-                    currentTile.addFoodPheromones(currentTile.getFoodAmount() * FOOD_PHEROMONE_DROP_PER_FOOD);
+                    currentTile.addFoodPheromones(currentTile.getFoodAmount()
+                            * FOOD_PHEROMONE_DROP_PER_FOOD);
 
                     if (ant.isHungry()) {
                         ant.eatFoodFrom(currentTile);
@@ -232,6 +370,9 @@ public class WorkerAnt extends Ant {
         RETURN_HOME {
             @Override
             final void perform(final WorkerAnt ant, final World world) {
+                /*
+                 * This relies on inventory only being food
+                 */
                 if (ant.getCurrentInventoryWeight() > 0) {
                     ant.dropFoodPheromones(world);
                 }
@@ -247,7 +388,7 @@ public class WorkerAnt extends Ant {
                         ant.setTask(Task.REST);
                     }
                 } else {
-                    ant.goTo(world.colony, world);
+                    ant.goToRandomly(world.colony, world);
                 }
             }
         },
@@ -271,7 +412,7 @@ public class WorkerAnt extends Ant {
                 if (ant.isNear(qAnt, CLEAN_RADIUS) && qAnt.getDirtiness() > 0) {
                     ant.clean(world.getQueen());
                 } else {
-                    ant.goTo(world.getQueen(), world);
+                    ant.goToRandomly(world.getQueen(), world);
                 }
             }
         },
@@ -303,93 +444,5 @@ public class WorkerAnt extends Ant {
         };
 
         abstract void perform(final WorkerAnt ant, final World world);
-    }
-
-    private boolean followFoodPheromones(final World world) {
-        if (rng.nextInt(100) >= FOOD_PHEROMONE_FOLLOW_CHANCE)
-            return false;
-
-        final Position currentPosition = new Position(getPosition().getX(), getPosition().getY());
-        Position bestPosition = null;
-        double bestPheromones = Math.max(
-                MIN_FOOD_PHEROMONE_TO_FOLLOW,
-                world.getTile(getPosition()).getFoodPheromones() + FOOD_PHEROMONE_UPHILL_MARGIN
-        );
-
-        final int x = getPosition().getX();
-        final int y = getPosition().getY();
-
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                if (dx == 0 && dy == 0)
-                    continue;
-
-                final int nextX = x + dx;
-                final int nextY = y + dy;
-
-                if (nextX < 0 || nextX >= world.getSizeX() || nextY < 0 || nextY >= world.getSizeY())
-                    continue;
-
-                if (previousFoodPheromonePosition != null
-                        && nextX == previousFoodPheromonePosition.getX()
-                        && nextY == previousFoodPheromonePosition.getY()) {
-                    continue;
-                }
-
-                final double pheromones = world.getTile(nextX, nextY).getFoodPheromones();
-
-                if (pheromones > bestPheromones) {
-                    bestPheromones = pheromones;
-                    bestPosition = new Position(nextX, nextY);
-                }
-            }
-        }
-
-        if (bestPosition == null)
-            return false;
-
-        previousFoodPheromonePosition = currentPosition;
-        goTo(bestPosition, world);
-        return true;
-    }
-
-    private void dropFoodPheromones(final World world) {
-        if (!world.colony.hasPosition())
-            return;
-
-        final int distanceFromHome = getDistanceFrom(world.colony.getPosition());
-        final double baseAmount = Math.max(1, getCurrentInventoryAmount()) * FOOD_PHEROMONE_DROP_PER_FOOD;
-
-        if (distanceFromHome < MIN_DISTANCE_FROM_HOME_TO_DROP_FOOD_PHEROMONES
-                && baseAmount < MIN_FOOD_PHEROMONE_DROP_NEAR_HOME) {
-            return;
-        }
-
-        final double distanceScale = Math.min(
-                1.0,
-                Math.max(
-                        0.35,
-                        (double) distanceFromHome / FULL_FOOD_PHEROMONE_DISTANCE_FROM_HOME
-                )
-        );
-        final double amount = baseAmount * distanceScale;
-
-        world.getTile(getPosition()).addFoodPheromones(amount);
-    }
-
-    private int getDistanceFrom(final Position position) {
-        return Math.max(
-                Math.abs(getPosition().getX() - position.getX()),
-                Math.abs(getPosition().getY() - position.getY())
-        );
-    }
-
-    private int getCurrentInventoryAmount() {
-        int total = 0;
-
-        for (final Item item : inventory)
-            total += item.getAmount();
-
-        return total;
     }
 }
