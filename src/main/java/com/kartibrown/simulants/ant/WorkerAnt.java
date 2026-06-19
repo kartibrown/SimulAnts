@@ -13,7 +13,8 @@ import com.kartibrown.simulants.world.World;
 
 public class WorkerAnt extends Ant {
     private static final int CLEAN_RADIUS = 3;
-    private static final int MAX_CARRY = 10;
+    private static final int MAX_CARRY_WEIGHT = 10;
+    private static final int MAX_PICKUP_PER_TICK = 2;
     private static final int FOOD_PHEROMONE_FOLLOW_CHANCE = 80;
     private static final int WORK_ENERGY_COST_CHANCE = 15;
     private static final int HUNGER_DECAY_CHANCE = 10;
@@ -121,7 +122,8 @@ public class WorkerAnt extends Ant {
         final Food food = tile.peekFood();
 
         final int maxAmountByWeight = getRemainingInventoryCapacity() / food.getWeightPerUnit();
-        final int amountToTake = Math.min(food.getAmount(), maxAmountByWeight);
+        int amountToTake = Math.min(food.getAmount(), maxAmountByWeight);
+        amountToTake = Math.min(amountToTake, MAX_PICKUP_PER_TICK);
 
         if (amountToTake <= 0)
             return;
@@ -129,7 +131,7 @@ public class WorkerAnt extends Ant {
         final Food takenFood = tile.takeFood(amountToTake);
         inventory.add(takenFood);
 
-        points += 4; // give them points to know when they did good
+        points += (amountToTake * 2); // give them points to know when they did good
     }
 
     protected final void eatFoodFrom(final Tile tile) {
@@ -162,7 +164,7 @@ public class WorkerAnt extends Ant {
     }
 
     private int getRemainingInventoryCapacity() {
-        return MAX_CARRY - getCurrentInventoryWeight();
+        return MAX_CARRY_WEIGHT - getCurrentInventoryWeight();
     }
 
     private void setTask(final Task task) {
@@ -347,14 +349,14 @@ public class WorkerAnt extends Ant {
                         if (!ant.isHungry()) {
                             ant.pickUpFoodFrom(currentTile);
 
-                            if (ant.getCurrentInventoryWeight() > 0) {
+                            if (ant.getCurrentInventoryWeight() >= MAX_CARRY_WEIGHT) {
                                 ant.setTask(Task.RETURN_HOME);
                             }
                         }
                     } else {
                         ant.pickUpFoodFrom(currentTile);
 
-                        if (ant.getCurrentInventoryWeight() > 0) {
+                        if (ant.getCurrentInventoryWeight() >= MAX_CARRY_WEIGHT) {
                             ant.setTask(Task.RETURN_HOME);
                         }
                     }
