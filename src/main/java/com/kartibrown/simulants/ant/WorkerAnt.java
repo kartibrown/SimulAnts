@@ -122,8 +122,8 @@ public class WorkerAnt extends Ant {
         final Food food = tile.peekFood();
 
         final int maxAmountByWeight = getRemainingInventoryCapacity() / food.getWeightPerUnit();
-        int amountToTake = Math.min(food.getAmount(), maxAmountByWeight);
-        amountToTake = Math.min(amountToTake, MAX_PICKUP_PER_TICK);
+        final int amountToTake = Math.min(Math.min(food.getAmount(), maxAmountByWeight),
+                MAX_PICKUP_PER_TICK);
 
         if (amountToTake <= 0)
             return;
