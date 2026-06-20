@@ -19,12 +19,7 @@ public class SimulationManager {
 
     public final SimulationSession createSession(final WebSocketSession webSocketSession){
         SimulationSession session = new SimulationSession(new World(), webSocketSession);
-
         this.sessions.put(session.getId(), session);
-
-        Thread thread = new Thread(() -> session.getWorld().start());
-        thread.setName("SimulAnts-" + session.getId());
-        thread.start();
 
         return session;
     }
@@ -43,10 +38,8 @@ public class SimulationManager {
 
     protected void removeSession(final String sessionId)
     {
-        final SimulationSession session = this.sessions.remove(sessionId);
+        this.sessions.remove(sessionId);
 
-        if (session != null)
-            session.stopWorldLoop();
     }
 
     SimulationSession getSession(final String sessionID){

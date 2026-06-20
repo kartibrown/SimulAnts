@@ -1,7 +1,6 @@
 package com.kartibrown.simulants.server;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -86,11 +85,21 @@ public class SimulationWebSocketHandler extends TextWebSocketHandler {
                 final String payload = objectMapper.writeValueAsString(session.getWorld().toState());
                 webSocketSession.sendMessage(new TextMessage(payload));
                 session.markActive();
-            } catch (final JsonProcessingException e) {
-                System.out.println("Couldn't serialize world state for session " + session.getId());
             } catch (final Exception e) {
+                System.out.println("Failed to send updates to session " + session.getId() + ": " + e.getMessage());
                 simulationManager.removeSession(session.getId());
             }
+        }
+    }
+
+    @Scheduled(fixedRate = 50)
+    public final void updateWorlds(){
+        for(final SimulationSession session : simulationManager.getSessions()){
+            if(session.isPaused()){
+                continue;
+            }
+
+            session.getWorld().update();
         }
     }
 }

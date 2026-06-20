@@ -1,8 +1,6 @@
 plugins {
     java
-
-    id("org.springframework.boot") version "3.5.0"
-
+    id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -20,11 +18,9 @@ repositories {
 }
 
 dependencies {
-    implementation(
-        "org.springframework.boot:spring-boot-starter-web"
-    )
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("com.fasterxml.jackson.core:jackson-core")
 
-    implementation(
-        "org.springframework.boot:spring-boot-starter-websocket"
-    )
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
 }
