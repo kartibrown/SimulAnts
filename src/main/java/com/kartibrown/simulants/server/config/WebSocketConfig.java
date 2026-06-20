@@ -1,5 +1,6 @@
-package com.kartibrown.simulants.server;
+package com.kartibrown.simulants.server.config;
 
+import com.kartibrown.simulants.server.SimulationWebSocketHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;

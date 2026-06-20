@@ -93,4 +93,15 @@ public class SimulationWebSocketHandler extends TextWebSocketHandler {
             }
         }
     }
+
+    @Scheduled(fixedRate = 50)
+    public final void updateWorlds(){
+        for(final SimulationSession session : simulationManager.getSessions()){
+            if(session.isPaused()){
+                continue;
+            }
+
+            session.getWorld().update();
+        }
+    }
 }

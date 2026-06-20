@@ -33,13 +33,7 @@ public final class World {
 
     private final SplittableRandom rng;
 
-    private final ScheduledExecutorService scheduler;
     private long tick = 0;
-    private static final int TPS = 20;
-    private static final long TICK_MS = 1000 / TPS; // 50 ms
-
-    private volatile boolean loop;
-    private volatile boolean paused;
 
     public World() {
         logBuffer = new StringBuilder();
@@ -64,32 +58,9 @@ public final class World {
 
         foodSpawnTimer = 0;
         baseFoodSpawnCooldown = EARLY_BASE_FOOD_SPAWN_COOLDOWN;
-
-        // Better than Thread.sleep()
-        scheduler = Executors.newSingleThreadScheduledExecutor();
-
-        loop = true;
-        paused = false;
     }
 
-    public void start() {
-        scheduler.scheduleWithFixedDelay(this::update, 0,
-                TICK_MS, TimeUnit.MILLISECONDS); // 20 TPS
-    }
-
-    private void update() {
-        if (!loop) {
-            scheduler.shutdown();
-            return;
-        }
-
-        /*
-         * This needs to be reworked as Thread.wait()/notify() is better
-         */
-        if (paused) {
-            return;
-        }
-
+    public synchronized void update() {
         updateWorld();
         queen.update(this);
 
@@ -245,14 +216,6 @@ public final class World {
     private void addIfInsideWorld(final List<Position> list, final int x, final int y) {
         if (x >= 0 && x < sizeX && y >= 0 && y < sizeY)
             list.add(new Position(x, y));
-    }
-
-    public void setPaused(final boolean b) {
-        paused = b;
-    }
-
-    public void stop() {
-        loop = false;
     }
 
     public Tile getTile(final int x, final int y) {

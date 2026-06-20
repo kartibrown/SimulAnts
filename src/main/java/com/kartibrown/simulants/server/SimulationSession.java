@@ -12,12 +12,15 @@ public final class SimulationSession {
     private final String id;
     private long lastSeenActive;
 
+    private volatile boolean paused;
+
     public SimulationSession(final World world, final WebSocketSession webSocketSession) {
         this.world = world;
         this.webSocketSession = webSocketSession;
         this.id = UUID.randomUUID().toString();
 
         this.lastSeenActive = System.currentTimeMillis();
+        this.paused = false;
     }
 
     public void markActive() {
@@ -27,11 +30,6 @@ public final class SimulationSession {
     public boolean hasTimedOut()
     {
         return System.currentTimeMillis() - this.lastSeenActive > 60_000;
-    }
-
-    public void stopWorldLoop()
-    {
-        world.stop();
     }
 
     /*
@@ -51,6 +49,10 @@ public final class SimulationSession {
     }
 
     public void setPaused(final boolean b) {
-        this.world.setPaused(b);
+        this.paused = b;
+    }
+
+    public boolean isPaused() {
+        return paused;
     }
 }
