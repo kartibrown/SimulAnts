@@ -44,6 +44,9 @@ function renderLoop() {
     ctx.fillStyle = "#171717";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    ctx.save();
+    ctx.scale(zoom, zoom);
+
     renderTiles(latestWorldState);
 
     let renderedAnts = 0;
@@ -68,11 +71,11 @@ function renderLoop() {
         const screenX = (renderAnt.renderX * TILE_SIZE) - cameraX;
         const screenY = (renderAnt.renderY * TILE_SIZE) - cameraY;
 
-        const isVisible =
+            const isVisible =
             screenX + TILE_SIZE >= -ANT_RENDER_PADDING &&
-            screenX <= canvas.width + ANT_RENDER_PADDING &&
+            screenX <= (canvas.width / zoom) + ANT_RENDER_PADDING &&
             screenY + TILE_SIZE >= -ANT_RENDER_PADDING &&
-            screenY <= canvas.height + ANT_RENDER_PADDING;
+            screenY <= (canvas.height / zoom) + ANT_RENDER_PADDING;
 
         if (!isVisible) {
             continue;
@@ -93,6 +96,8 @@ function renderLoop() {
 
         renderedAnts++;
     }
+    
+    ctx.restore();
 
     updateAntRenderCount();
 }
@@ -108,9 +113,9 @@ function renderTiles(worldState) {
 
         const isVisible =
             screenX + TILE_SIZE >= 0 &&
-            screenX <= canvas.width &&
+            screenX <= (canvas.width / zoom) &&
             screenY + TILE_SIZE >= 0 &&
-            screenY <= canvas.height;
+            screenY <= (canvas.height / zoom);
 
         if (!isVisible) {
             continue;

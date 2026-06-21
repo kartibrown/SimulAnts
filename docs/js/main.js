@@ -8,7 +8,12 @@ const darkModeToggle = document.getElementById("darkModeButton");
 
 let socket = null;
 let heartbeatTimer = null;
+
 let dragging = false;
+let zoom = 1.0;
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 2.0;
+const ZOOM_SPEED = 0.010;
 
 const HEARTBEAT_INTERVAL = 10000; // 10 seconds
 const ACTIVE_MSG = "HEARTBEAT";
@@ -50,9 +55,24 @@ document.addEventListener("mouseup", () => {
 document.addEventListener("mousemove", (event) => {
     if (!dragging) return;
 
-    cameraX -= event.movementX;
-    cameraY -= event.movementY;
+    cameraX -= (event.movementX / zoom);
+    cameraY -= (event.movementY / zoom);
 });
+
+document.addEventListener("wheel", (event) => {
+    if(event.target.closest("#renderControls")) {
+        return;
+    }
+
+    if(event.deltaY < 0) {
+        zoom += ZOOM_SPEED;
+    } else {
+        zoom -= ZOOM_SPEED;
+    }
+
+    zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
+    
+}, { passive: true }); // Better performance
 
 startButton.addEventListener("click", () => {
     menuScreen.classList.add("hidden");
