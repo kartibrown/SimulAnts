@@ -156,7 +156,7 @@ public final class World {
                     "WORKER",
                     ant.getPosition().getX(),
                     ant.getPosition().getY()
-                ));
+            ));
         }
 
         for (int x = 0; x < sizeX; x++) {
@@ -188,6 +188,7 @@ public final class World {
 
     /**
      * Gets the tiles that is north, east, south and west of the position
+     *
      * @param pos Position
      * @return North, east, south and west tiles of the position<br>
      * does not return tiles if they are outside the world
@@ -198,6 +199,7 @@ public final class World {
 
     /**
      * Gets the tiles that is north, east, south and west of the position
+     *
      * @param x x position
      * @param y y position
      * @return North, east, south and west tiles of the position
@@ -264,5 +266,9 @@ public final class World {
 
     public void log(final String message) {
         logBuffer.append(message).append('\n');
+    }
+
+    public long getTickCounter() {
+        return tick;
     }
 }
