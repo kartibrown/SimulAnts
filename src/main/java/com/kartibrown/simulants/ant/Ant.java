@@ -18,10 +18,12 @@ public abstract class Ant {
 
     protected String name;
 
-    protected Position pos;
+    protected final Position pos;
 
     protected int energy, health, damage;
     private int moveXDirection, moveYDirection;
+
+    protected int speedInterval;
 
     /**
      * Represents how hungry the ant is.<br>
@@ -42,6 +44,8 @@ public abstract class Ant {
         this.hunger = 100;
         this.damage = 0;
 
+        speedInterval = 3;
+
         this.pos = pos;
         this.moveXDirection = rng.nextInt(-1, 2);
         this.moveYDirection = rng.nextInt(-1, 2);
@@ -58,6 +62,9 @@ public abstract class Ant {
         //if (rng.nextInt(100) >= RANDOM_MOVE_CHANCE)
         //    return;
 
+        if (shouldSkipMovement(world))
+            return;
+
         if ((moveXDirection == 0 && moveYDirection == 0) || rng.nextInt(100) < 25) {
             moveXDirection = rng.nextInt(-1, 2);
             moveYDirection = rng.nextInt(-1, 2);
@@ -71,12 +78,15 @@ public abstract class Ant {
             moveYDirection = rng.nextInt(-1, 2);
         }
 
+        // not needing the setPosition() method here
         pos.setX(pos.getX() + moveXDirection);
         pos.setY(pos.getY() + moveYDirection);
 
-        pos.setX(Math.clamp(pos.getX(), 0, world.getSizeX() - 1));
-        pos.setY(Math.clamp(pos.getY(), 0, world.getSizeY() - 1));
+        // But here we do :D
+        setPosition(Math.clamp(pos.getX(), 0, world.getSizeX() - 1),
+                Math.clamp(pos.getY(), 0, world.getSizeY() - 1));
 
+        // Makes them bounce back if they get outside world
         if (pos.getX() == 0 || pos.getX() == world.getSizeX() - 1) {
             moveXDirection *= -1;
         }
@@ -88,14 +98,17 @@ public abstract class Ant {
 
     /**
      * Goes straight towards a target
+     *
      * @param target the target position the ant is gonna walk straight towards
      */
     public final void goTo(final Position target, final World world) {
+        if (shouldSkipMovement(world))
+            return;
+
         int dx = Integer.compare(target.getX(), this.pos.getX());
         int dy = Integer.compare(target.getY(), this.pos.getY());
 
-        this.pos.setX(this.pos.getX() + dx);
-        this.pos.setY(this.pos.getY() + dy);
+        setPosition(this.pos.getX() + dx, this.pos.getY() + dy);
     }
 
     /**
@@ -103,9 +116,10 @@ public abstract class Ant {
      * <br>
      * If Ant can't find any tiles that closes the distance towards target it will
      * go straight towards the target once
+     *
      * @param queen goes to the queen's position
      */
-    public final void goToRandomly(final QueenAnt queen, final World world){
+    public final void goToRandomly(final QueenAnt queen, final World world) {
         goToRandomly(queen.getPosition(), world);
     }
 
@@ -114,6 +128,7 @@ public abstract class Ant {
      * <br>
      * If Ant can't find any tiles that closes the distance towards target it will
      * go straight towards the target once
+     *
      * @param colony goes to the colony's position
      */
     public final void goToRandomly(final Colony colony, final World world) {
@@ -125,18 +140,19 @@ public abstract class Ant {
      * <br>
      * If Ant can't find any tiles that closes the distance towards target it will
      * go straight towards the target once
+     *
      * @param target the target position the ant is gonna walk towards
      */
     public final void goToRandomly(final Position target, final World world) {
         //if (rng.nextInt(100) >= DIRECT_MOVE_CHANCE)
         //  return;
 
-        //-TEST
+        if (shouldSkipMovement(world))
+            return;
 
         if (getDistanceFrom(target) <= 1) {
             // if target is one block away then go into the target
-            this.pos.setX(target.getX());
-            this.pos.setY(target.getY());
+            setPosition(target);
             return;
         }
 
@@ -150,15 +166,13 @@ public abstract class Ant {
             // choose one of those moves
             final Position move = bestMoves.get(rng.nextInt(bestMoves.size()));
 
-            this.pos.setX(move.getX());
-            this.pos.setY(move.getY());
+            setPosition(move);
         } else {
             // JUST RANDOMLY
             final List<Position> neighbours = world.getNeighbourTiles(this.pos);
             final Position move = neighbours.get(rng.nextInt(neighbours.size()));
 
-            this.pos.setX(move.getX());
-            this.pos.setY(move.getY());
+            setPosition(move);
         }
     }
 
@@ -188,6 +202,7 @@ public abstract class Ant {
 
     /**
      * This is the manhattan-distance, not the fly way distance
+     *
      * @return the manhattan-distance between two positions
      */
     protected final int getDistanceFrom(final Position pos1, final Position pos2) {
@@ -196,6 +211,7 @@ public abstract class Ant {
 
     /**
      * This is the manhattan-distance, not the fly way distance
+     *
      * @param position which position you want to get the distance to
      * @return returns the distance between this objects position and the positions you pass
      */
@@ -204,11 +220,23 @@ public abstract class Ant {
                 Math.abs(getPosition().getY() - position.getY());
     }
 
-    protected final boolean isNear(final Ant ant, final int radius) {
-        int dx = Math.abs(this.pos.getX() - ant.getPosition().getX());
-        int dy = Math.abs(this.pos.getY() - ant.getPosition().getY());
+    protected final boolean isNear(final QueenAnt qAnt, final int radius) {
+        return isNear(qAnt.getPosition(), radius);
+    }
+
+    protected final boolean isNear(final Colony colony, final int radius) {
+        return isNear(colony.getPosition(), radius);
+    }
+
+    protected final boolean isNear(final Position pos, final int radius) {
+        int dx = Math.abs(this.pos.getX() - pos.getX());
+        int dy = Math.abs(this.pos.getY() - pos.getY());
 
         return dx <= radius && dy <= radius;
+    }
+
+    protected final boolean shouldSkipMovement(final World world) {
+        return (world.getTickCounter() + this.id) % this.speedInterval != 0;
     }
 
     public final int getId() {
@@ -232,7 +260,12 @@ public abstract class Ant {
     }
 
     public final void setPosition(final Position pos) {
-        this.pos = pos;
+        this.setPosition(pos.getX(), pos.getY());
+    }
+
+    public final void setPosition(final int x, final int y) {
+        pos.setX(x);
+        pos.setY(y);
     }
 
     public final Position getPosition() {

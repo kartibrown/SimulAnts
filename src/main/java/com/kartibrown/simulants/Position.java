@@ -12,13 +12,13 @@ public final class Position
 	}
 
 	@Override
-	public final boolean equals(final Object object)
+	public boolean equals(final Object object)
 	{
-		if (this == object)
-			return true;
-
 		if (object == null || getClass() != object.getClass())
 			return false;
+
+		if (this == object)
+			return true;
 
 		final Position other = (Position) object;
 

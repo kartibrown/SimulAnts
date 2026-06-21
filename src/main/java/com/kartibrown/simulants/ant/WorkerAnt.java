@@ -175,7 +175,16 @@ public class WorkerAnt extends Ant {
         return getRemainingInventoryCapacity() > 0;
     }
 
+    /**
+     * checks neighbor tiles in Manhattan if it has a stronger foodPheromone
+     * and goes to that tile
+     * @return returns true if it did follow Food Pheromones<br>
+     * returns false if it didn't
+     */
     private boolean followFoodPheromones(final World world) {
+        if(shouldSkipMovement(world))
+            return false;
+
         if (rng.nextInt(100) >= FOOD_PHEROMONE_FOLLOW_CHANCE)
             return false;
 
@@ -237,8 +246,13 @@ public class WorkerAnt extends Ant {
 
     private void dropFoodPheromones(final World world) {
         // this can't happen here but is a failsafe
+        // yes, I don't trust my own code xD
         if (!world.colony.hasPosition())
             return;
+
+        if(this.isNear(world.colony, 1)){
+            previousFoodPheromonePosition = null;
+        }
 
         final int distanceFromHome = getDistanceFrom(world.colony.getPosition());
         final double baseAmount = Math.max(1, getCurrentInventoryAmount())
@@ -265,7 +279,12 @@ public class WorkerAnt extends Ant {
          */
         final double amount = baseAmount * distanceScale;
 
-        world.getTile(getPosition()).addFoodPheromones(amount);
+        if(previousFoodPheromonePosition == null ||
+                !previousFoodPheromonePosition.equals(getPosition())) {
+            world.getTile(getPosition()).addFoodPheromones(amount);
+        }
+
+        previousFoodPheromonePosition = new Position(pos.getX(), pos.getY());
     }
 
     private int getCurrentInventoryAmount() {
